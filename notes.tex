@@ -22,6 +22,7 @@
 %\usepackage[version=0.96]{pgf}
 \usepackage{enumitem}
 
+
 \def\chpcolor{blue!45}
 \def\chpcolortxt{blue!60}
 
@@ -54,6 +55,9 @@
 % Just some sample text
 \usepackage{lipsum}
 \input{macros}
+%%
+% Configure natbib for numeric citations
+% Note: tufte-book loads natbib, so we need to configure it properly
 %%
 % For nicely typeset tabular material
 \usepackage{booktabs}
@@ -275,30 +279,48 @@ These lecture notes are based on scribe notes taken by students in CS 276 over t
 
 \newcommand{\bhaskar}[1]{{\color{ForestGreen} Bhaskar: #1}}
 
-
 \mainmatter
-\input{lec00-F24}
-\input{lec01-F24}
-\input{lec02-F24}
-\input{lec03-F24}
-\input{lec04-F24}
-\input{lec05-F24}
-\input{lec06-F24}
-\input{empty-lec07-F24}
-\input{lec08-F24}
-\input{lec09-F24}
-\input{lec11-F24}
-\input{lec12-F24}
+\input{lec00}
+\input{lec01}
+\input{lec02}
+\input{lec03}
+\input{lec04}
+\input{lec05}
+\input{lec06}
+\input{lec07}
+\input{lec08}
+\input{lec09}
+\input{lec10}
 
-%%
+
+\input{lec11}
+\input{lec12}
+\input{lec13}
+\input{lec14}
+\input{lec15}
+\input{lec16}
+\input{lec17}
+\input{lec18}
+\input{lec19}
+\input{lec20}
+\input{lec21}
+\input{lec22}
+\input{lec23}
+\input{lec24}
+\input{lec25}
+\input{lec26}
+% \input{lec27} % Near-duplicate of lec26
+\input{lec28}
+
 % The back matter contains appendices, bibliographies, indices, glossaries, etc.
-
 
 
 \backmatter
 
+% Force numeric citations
+%\citestyle{numbers}
 \bibliography{cryptobib/abbrev0,cryptobib/crypto}
-\bibliographystyle{plainnat}
+%\bibliographystyle{unsrtnat}
 
 
 %\printindex
