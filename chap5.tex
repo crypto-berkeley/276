@@ -1,0 +1,612 @@
+\chapter{Chapter 5}
+\label{chap:5}
+
+% !TEX root = collection.tex
+
+\\chapter{Digital Signatures}
+
+In this chapter, we will introduce the notion of a digital signature. At an intuitive level, a digital signature scheme helps providing authenticity of messages and ensuring non-repudiation. We will first define this primitive and then construct what is called as one-time secure digital signature scheme. An one-time digital signature satisfies a weaker security property when compared to digital signatures. We then introduce the concept of collision-resistant hash functions and then use this along with a one-time secure digital signature to give a construction of digital signature scheme.
+
+\\section{Definition}
+
+A digital signature scheme is a tuple of three algorithms \$(\\Gen,\\Sign,\\Verify)\$ with the following syntax:
+\\begin{enumerate}
+\\item \$\\Gen(1^n)\\to (vk,sk)\$: On input the message length (in unary) \$1^n\$, \$\\Gen\$ outputs a secret signing key \$sk\$ and a public verification key \$vk\$.
+\\item \$\\Sign(sk, m) \\to \\sigma\$: On input a secret key \$sk\$ and a message \$m\$ of length \$n\$, the \$\\Sign\$ algorithm outputs a signature \$\\sigma\$.
+\\item \$\\Verify(vk, m, \\sigma) \\to \\{0,1\\}\$: On input the verification key \$vk\$, a message \$m\$ and a signature \$\\sigma\$, the \$\\Verify\$ algorithm outputs either \$0\$ or \$1\$.
+\\end{enumerate}
+
+We require that the digital signature to satisfy the following correctness and security properties.\\\\
+\\medskip
+\\noindent\\textbf{Correctness.} For the correctness of the scheme, we have that
+\$\\forall m \\in \\bin^n\$,
+\\[\\Pr \\left[ (vk,sk) \\gets \\Gen(1^n), \\sigma \\leftarrow \\Sign(sk,m) : \\Verify(vk, m, \\sigma) = 1 \\right] = 1.\\]
+
+\\medskip
+\\noindent\\textbf{Security.} Consider the following game between an adversary and a challenger
+.
+
+\\begin{enumerate}
+    \\item The challenger first samples \$(vk,sk) \\gets \\Gen(1^n)\$. The challenger gives \$vk\$ to the adversary.
+    \\item \\textbf{Signing Oracle.} The adversary is now given access to a signing oracle. When the adversary gives a query \$m\$ to the oracle, it gets back \$\\sigma \\gets \\Sign(sk,m)\$.
+    \\item \\textbf{Forgery.} The adversary outputs a message, signature pair \$(m^*,\\sigma^*)\$ where \$m^*\$ is different from the queries that adversary has made to the signing oracle.
+    \\item The adversary wins the game if \$\\Verify(vk,m^*,\\sigma^*) = 1\$.
+\\end{enumerate}
+We say that the digital signature scheme is secure if the probability that the adversary wins the game is \$\\negl(n)\$.
+
+\\section{One-time Digital Signature}
+\\label{lampart}
+An one-time digital signature has the same syntax and correctness requirement as that of a digital signature scheme except that in the security game the adversary is allowed to call the signing oracle only once (hence the name one-time). We will now give a construction of one-time signature scheme from the assumption that one-way functions exists.
+
+Let \$f: \\bin^n \\rightarrow \\bin^n\$ be a one-way function.
+\\begin{itemize}
+\\item \$\\Gen(1^n)\$: On input the message length (in unary) \$1^n\$, \$\\Gen\$ does the following:
+\\begin{enumerate}
+    \\item Chooses \$x_{i,b} \\gets \\bin^n\$ for each \$i \\in [n]\$ and \$b \\in \\bin\$.
+    \\item Output \$vk = \\left[ \\begin{array}{ccc}
+f(x_{1,0}) & \\ldots & f(x_{n,0}) \\\\
+f(x_{1,1}) & \\ldots & f(x_{n,1}) \\\\
+\\end{array} \\right]\$ and \$sk = \\left[ \\begin{array}{ccc}
+x_{1,0} & \\ldots & x_{n,0} \\\\
+x_{1,1} & \\ldots & x_{n,1} \\\\
+\\end{array} \\right]\$
+\\end{enumerate}
+\\item \$\\Sign(sk, m)\$: On input a secret key \$sk\$ and a message \$m \\in \\bin^n\$, the \$\\Sign\$ algorithm outputs a signature \$\\sigma = x_{1,m_1}\\|x_{2,m_2}\\| \\ldots \\| x_{n,m_n}\$.
+\\item \$\\Verify(vk, m, \\sigma)\$: On input the verification key \$vk\$, a message \$m\$ and a signature \$\\sigma\$, the \$\\Verify\$ algorithm does the following:
+\\begin{enumerate}
+    \\item Parse \$\\sigma = x_{1,m_1}\\|x_{2,m_2}\\| \\ldots \\| x_{n,m_n}\$.
+    \\item Compute \$vk'_{i,m_i} = f(x_{i,m_i})\$ for each \$i \\in [n]\$.
+    \\item Check if for each \$i \\in [n]\$, \$vk'_{i,m_i} = vk_{i,m_i}\$. If all the checks pass, output 1. Else, output 0.
+\\end{enumerate}
+\\end{itemize}
+
+Before we prove any security property, we first observe that this scheme is completely broken if we allow the adversary to ask for two signatures. This is because the adversary can query for the signatures on \$0^n\$ and \$1^n\$ respectively and the adversary gets the entire secret key. The adversary can then use this secret key to sign on any message and break the security. 
+
+We will now argue the one-time security of this construction. Let \$\\adv\$ be an adversary who breaks the security of our one-time digital signature scheme with non-negligible probability \$\\mu(n)\$. We will now construct an adversary \$\\advb\$ that breaks the one-wayness of \$f\$. \$\\advb\$ receives a one-way function challenge \$y\$ and does the following:
+\\begin{enumerate}
+    \\item \$\\advb\$ chooses \$i^*\$ uniformly at random from \$[n]\$ and \$b^*\$ uniformly at random from \$\\bin\$.
+    \\item It sets \$vk_{i^*,b^*} = y\$
+    \\item For all \$i \\in [n]\$ and \$b \\in \\bin\$ such that \$(i,b) \\neq (i^*,b^*)\$, \$\\advb\$ samples \$x_{i,b} \\gets \\bin^n\$. It computes \$vk_{i,b} = f(x_{i,b})\$.
+    \\item It sets \$vk = \\left[ \\begin{array}{ccc}
+vk_{1,0} & \\ldots& vk_{n,0} \\\\
+vk_{1,1} & \\ldots& vk_{n,1} \\\\
+\\end{array} \\right]\$ and sends \$vk\$ to \$\\adv\$.
+\\item \$\\adv\$ now asks for a signing query on a message \$m\$. If \$m_{i^*} = b^*\$ then \$\\advb\$ aborts and outputs a special symbol \$\\abort_1\$. Otherwise, it uses it knowledge of \$x_{i,b}\$ for \$(i,b) \\neq (i^*,b^*)\$ to output a signature on \$m\$.
+\\item \$\\adv\$ outputs a valid forgery \$(m^*,\\sigma^*)\$. If \$m^*_{i^*} = m_{i^*}\$ then \$\\advb\$ aborts and outputs a special symbol \$\\abort_2\$. If it does not abort, then it parses \$\\sigma^*\$ as \${1,m_1}\\|x_{2,m_2}\\| \\ldots \\| x_{n,m_n}\$ and outputs \$x_{i^*,b^*}\$ as the inverse of \$y\$.
+\\end{enumerate}
+We first note that conditioned on \$\\advb\$ not outputting \$\\abort_1\$ or \$\\abort_2\$, the probability that \$\\advb\$ outputs a valid preimage of \$y\$ is \$\\mu(n)\$. Now, probability \$\\advb\$ does not output \$\\abort_1\$ or \$\\abort_2\$ is \$1/2n\$ (this is because \$\\abort_1\$ is not output with probability \$1/2\$ and conditioned on not outputting \$\\abort_1\$, \$\\abort_2\$ is not output with probability \$1/n\$). Thus, \$\\advb\$ outputs a valid preimage with probability \$\\mu(n)/2n\$. This completes the proof of security.
+
+We will now upgrade this one-time signature scheme to a full digital signature scheme. For this purpose, we can use either universal one-way hash functions or collision-resistant hash functions.
+
+\\section{Universal One-way Hash Function -- UOWHF}
+We now introduce a universal one-way hash function (UOWHF). UOWHF is pronounced as ``woof''.
+UOWHFs are stronger than universal hash functions but weaker than collision-resistant hash functions (CRHFs). 
+
+All three primitives (universal hash functions, UOWHFs, and CRHFs) guarantee that an attacker cannot find two colliding inputs, but they differ in when the attacker must output their collision. Universal hash functions require the attacker to output both colliding inputs \\textit{before} seeing the hash function's key. Collision-resistant hash functions allow the attacker to output both colliding inputs \\textit{after} seeing the hash function's key. UOWHFs are in between: they require the attacker to output one colliding input before seeing the key and allow the attacker to output the second colliding input after seeing the key.
+
+Universal hash functions can be constructed unconditionally, without computational assumptions. UOWHFs can be constructed from OWFs. Finally, the existence of collision-resistant hash functions is believed to be a stronger assumption than the existence of OWFs.
+
+We now give a formal definition of universal one-way hash functions. 
+\\begin{definition}[Universal One-way Hash Function (UOWHF)]
+    Let \$\\ell\$: \$\\mathbb{N}\\rightarrow\\mathbb{N}\$. A \\textit{collection of functions} 
+    \$\\mathcal{H} = \\{h_s: \\bit^*\\rightarrow\\bit^{\\ell(|s|)}\\}_{s\\in\\bit^{*}}\$ is a universal one-way hash function if:
+    \\begin{enumerate}
+        \\item (Sampling): \$\\exists\$ PPT machine \$I\$ that takes \$1^n\$ and samples \$s\$.
+        \\item (Easy to compute): \$\\exists\$ a deterministic machine \$M\$ such that \$M(s,x)=h_s(x)\$.
+        \\item (Hard to find collisions): Given a PPT attacker \$\\mathcal{A}\$, the probability that \$\\mathcal{A}\$ wins the UOWHF game (given below) is negligible. 
+        \\[
+            \\Pr[UOWHF^{\\mathcal{H}}_{\\mathcal{A}}(n)=1]=\\negl
+        \\]
+    \\end{enumerate}
+\\end{definition}
+Where \$UOWHF^{\\mathcal{H}}_{\\mathcal{A}}\$ is the following game:
+\\begin{enumerate}
+    \\item \$(state, x)\\leftarrow\\mathcal{A}(1^n)\$.
+    \\item \$s\\leftarrow I(1^n)\$.
+    \\item \$y\\leftarrow\\mathcal{A}(state, s)\$
+    \\item Output \$1\$ if \$x \\neq y\$ and \$h_s(x)=h_s(y)\$. Output \$0\$ otherwise.
+\\end{enumerate}
+
+
+\\subsection{Construction}
+We construct a UOWHF from a one-way permutation in several steps, starting with a length-restricted notion, called a \$(d,r)\$-UOWHF, and relaxing the restriction gradually. 
+
+\\begin{definition}[\$(d,r)\$-UOWHFs]
+Let \$d,r\$: \$\\mathbb{N}\\rightarrow\\mathbb{N}\$ such that \$d(n) > r(n)\$ for all \$n \\in \\mathbb{N}\$. A \$(d,r)\$-UOWHF is a collection of functions \$\\mathcal{H} = \\{h_s: \\bit^{d(|s|)}\\rightarrow\\bit^{r(|s|)}\\}_{s\\in\\bit^{*}}\$ that satisfies the conditions of a UOWHF.
+\\end{definition}
+
+The construction of a UOWHF from a OWP proceeds in the following 4 steps.
+
+\\noindent\\textbf{Step I: \$(d, d-1)\$-UOWHFs}.
+We construct a UOWHF that takes an input of arbitrary length and truncates its length by 1. 
+\\begin{construction}\\label{construction-1}
+    Let \$f\$: \$\\bit^{d}\\rightarrow\\bit^{d}\$ be a one-way permutation, and \$a,b\\in GF(2^d)\$. We construct \$\\mathcal{H}^{d, d-1} = \\{h_s: \\bit^{d}\\rightarrow\\bit^{d-1}\\}_{s \\in \\bit^*}\$ as follows: 
+    \\[
+        h_{s=(a,b)}(x)=chop(a\\cdot f(x)+b)
+    \\]
+    where \$chop(\\cdot)\$ is the function that removes the first bit of a given bit string. 
+\\end{construction}
+
+\\begin{claim}
+    The \$\\mathcal{H}^{d, d-1}\$ given in construction \\ref{construction-1} is a \$(d,d-1)\$-UOWHF.
+\\end{claim} 
+
+\\begin{proof}
+    We prove this by contradiction. If an adversary \$\\mathcal{A}\$ can break the UOWHF security of \$\\mathcal{H}^{d, d-1}\$, then we can construct an adversary \$\\mathcal{B}\$ that breaks the OWP security of \$f\$. 
+
+    \\begin{enumerate}
+        \\item \$\\mathcal{B}\$ receives from its challenger a value \$y = f(x^*)\$ for a uniformly random \$x^* \\in \\bit^d\$.
+        \\item \$\\mathcal{B}\$ runs \$\\mathcal{A}\$ internally. \$\\cA\$ outputs the first preimage \$x_0\$.
+        \\item \$\\mathcal{B}\$ computes a value of \$s=(a,b)\$ such that 
+        \\[a \\cdot y + b = a \\cdot f(x_0) + b + (1 || 0^{d-1})\\] 
+        In other words \$h_s(x^*) = h_s(x_0)\$. Then \$\\cB\$ sends \$s\$ to \$\\cA\$.
+        \\item Finally, \$\\mathcal{A}\$ outputs \$x_1\$, which \$\\cB\$ outputs as its guess for \$x^*\$. 
+    \\end{enumerate} 
+    
+    Every output of \$h\$ has exactly two pre-images. This is because the mapping \$x \\to a \\cdot f(x) + b\$ is one-to-one (as long as \$a \\neq 0\$), and the mapping \$y \\to chop(y)\$ is two-to-one.
+
+    The only two preimages of \$h_s(x^*)\$ are \$x^*\$ and \$x_0\$ (assuming that \$x^* \\neq x_0\$, which is true with overwhelming probability). In order to break UOWHF security, \$\\cA\$ must output a preimage \$x_1\$ of \$h_s(x_0)\$ that is different from \$x_0\$. The only correct answer that \$\\cA\$ can give is \$x_1 = x^*\$. If \$x_1 = x^*\$, then \$\\cB\$ wins the OWP security game.
+\\end{proof}
+\\vspace{5mm}
+
+\\noindent\\textbf{Step II: \$(2n, n)\$-UOWHFs}.
+Now we construct length-restricted UOWHFs that shrink their input by a factor of 2.
+
+\\begin{construction}\\label{construction-2}
+    For any given \$d \\in \\{n, \\dots, 2n\\}\$, let \$\\mathcal{H}^{d, d-1} = \\{h_s^{d, d-1}: \\bit^{d}\\rightarrow\\bit^{d-1}\\}_{s\\in\\bit^{*}}\$ be a \$(d, d-1)\$-UOWHF. For a given \$n\$, we construct \$\\mathcal{H}^{2n, n} = \\{H^{2n, n}_{s_1\\cdots s_n}:\\bit^{2n}\\rightarrow\\bit^{n}\\}_{s \\in \\bit^*}\$ as follows:
+    \\[
+        H^{2n, n}_{s_1\\cdots s_n}=h_{s_1}^{n+1,n}(h_{s_2}^{n+2,n+1}(\\cdots h_{s_n}^{2n,2n-1}(x))\\cdots)
+    \\]
+\\end{construction}
+
+\\begin{claim}
+    The \$\\mathcal{H}^{2n, n}\$ constructed in construction \\ref{construction-2} is a \$(2n, n)\$-UOWHF.
+\\end{claim}
+\\begin{proof}
+    We will show that if we have an attacker \$\\mathcal{A}\$ that can break the UOWHF security of \$H\$, then we can construct an attacker \$\\mathcal{B}\$ that can break the UOWHF security of \$h\$. The intuition is that the attacker \$\\mathcal{B}\$ can randomly inject the challenge \$s\$ into a random layer of \$H\$, and \$\\mathcal{A}\$ will, with non-negligible probability, find a collision in that layer.
+
+    Let \$H_{partial}^i\$ compute the first \$i\$ layers of \$H\$. For any given \$i \\in [n]\$ and \$x \\in \\bit^{2n}\$:
+    \\[H_{partial}^i(x) = h_{s_{n-i+1}}^{2n-i+1, 2n-i}( \\dots h_{s_n}^{2n, 2n-1}(x) \\dots )\\]
+
+    Formally we define the procedure of \$\\mathcal{B}\$:
+    \\begin{enumerate}
+        \\item Sample \$i \\getsr [n]\$.
+        \\item \$\\forall i'\\neq i\$, sample \$s_{i'}\$.
+        \\item Receive \$x_0\$ from \$\\mathcal{A}\$.
+        \\item Compute \$x_0' = H_{partial}^{i-1}(x_0)\$, which is the input of \$i\$-th layer.
+        \\item Output \$x_0'\$ to the challenger.
+        \\item Receive \$s\$ from the challenger, and set \$s_i = s\$. Then send \$(s_1,\\dots,s_n)\$ to \$\\mathcal{A}\$.
+        \\item Receive \$x_1\$ from \$\\mathcal{A}\$.
+        \\item Compute \$x_1' = H_{partial}^{i-1}(x_1)\$ and output it to the challenger.
+    \\end{enumerate}
+
+If \$\\mathcal{A}\$ can find two distinct inputs \$x_0\$ and \$x_1\$ that collide in \$H\$, then there must exist some layer \$i^* \\in [n]\$ such that \$H_{partial}^{i^*-1}(x_0) \\neq H_{partial}^{i^*-1}(x_1)\$, but \$H_{partial}^{i^*}(x_0) = H_{partial}^{i^*}(x_1)\$. That means \$H_{partial}^{i^*-1}(x_0)\$ and \$H_{partial}^{i^*-1}(x_1)\$ represent a collision in \$h_{s_{n-i^*+1}}^{2n-i^*+1, 2n-i^*}\$, the \$i^*\$-th layer of \$H\$. 
+
+Furthermore, the index \$i^*\$ at which the collision occurs will, with probability \$= 1/n\$, be the \$i\$-value sampled by \$\\cB\$. This is because \$\\cA\$ has no information about which \$i\$-value \$\\cB\$ sampled, so \$i\$ is uniformly random and independent of \$i^*\$.
+
+Then \$\\Pr[\\cB \\text{ finds a collision in } h] \\geq \\frac{1}{n} \\cdot \\Pr[\\cA \\text{ finds a collision in } H]\$. If \$\\cA\$'s success probability is non-negligible, then so is \$\\cB\$'s success probability. 
+\\end{proof}
+\\vspace{5mm}
+
+\\noindent\\textbf{Step III: UOWHF that shrinks any input by a factor of two}.
+Let us define a \$(2{*}, {*})\$-UOWHF to be a hash function that takes inputs \$x\$ of arbitrary length, outputs a string that is half the length of the input, and satisfies the conditions of a UOWHF.
+
+\\begin{construction}[a \$(2{*}, {*})\$-UOWHF]
+    For a given \$n\$, let \$\\mathcal{H}^{2n, n} = \\{h_s:\\bit^{2n}\\rightarrow\\bit^{n}\\}_{s\\in\\bit^{*}}\$ be a \$(2n, n)-UOWHF\$. Then we construct a function \$H_s:\\bit^{2*} \\to \\bit^*\$ as follows. 
+    
+    For any \$x \\in \\bit^*\$, let us split it into chunks: \$x=x_1 || \\dots || x_t\$ where \$|x_i|=2n\$ for \$i=1,\\dots,t-1\$, and \$0\\leq|x_t|\\leq 2n\$. Then
+    \\[
+    \\text{let } H_s(x)=h_s(x_1)\\cdots h_s(x_{t}10^{2n-|x_t|-1})
+    \\]
+    Finally, let \$\\mathcal{H}^{2*, *} = \\{H_s\\}_{s \\in \\bit^*}\$.
+\\end{construction}
+Note that we reuse the same \$s\$ for every component of the output \$h_s(x_i)\$, which is an important gain in efficiency.
+
+\\begin{claim}
+    \$\\mathcal{H}^{2*, *}\$ is a \$(2{*}, {*})\$-UOWHF.
+\\end{claim}
+\\begin{proof}
+If there is an adversary \$\\mathcal{A}\$ that can create a collision, \$x^0\$ and \$x^1\$, in \$H\$, then we can construct an adversary \$\\mathcal{B}\$ that can create a collision in \$h\$. The construction of \$\\mathcal{B}\$ is as follows:
+\\begin{enumerate}
+    \\item Run \$\\mathcal{A}\$ until it outputs \$x^0\$. Compute \$t = \\lceil\\frac{|x^0|}{2n}\\rceil\$.
+    \\item Sample \$i \\getsr [t]\$. Then output \$x'^0 = x^0_{i}\$ to the challenger.
+    \\item Receive seed \$s\$ from the challenger and send \$s\$ to \$\\mathcal{A}\$.
+    \\item Run \$\\mathcal{A}\$ until it outputs \$x^1\$. Then output \$x'^1 = x^1_{i}\$.
+\\end{enumerate}
+
+If \$\\mathcal{A}\$ breaks the UOWHF security of \$H\$, then with non-negligible probability, it outputs an \$x^0\$ and \$x^1\$ such that \$x^0 \\neq x^1\$ but \$h_s(x^0_{i'})=h_s(x^1_{i'})\$ for every \$i' \\in [t]\$. If \$x^0 \\neq x^1\$, then there is at least one component \$i^* \\in [t]\$ for which \$x^0_{i^*} \\neq x^1_{i^*}\$. With probability \$\\geq \\frac{1}{t}\$, \$\\mathcal{B}\$ will sample an \$i \\in [t]\$ such that \$x^0_{i} \\neq x^1_{i}\$.
+\\end{proof}
+\\vspace{5mm}
+
+\\noindent\\textbf{Step IV: Full-Fledged UOWHFs}. 
+\\begin{construction}[(a UOWHF)]
+Let \$\\mathcal{H}^{2*, *} = \\{h_s:\\bit^{*}\\rightarrow\\bit^{*}\\}_{s\\in\\bit^{*}}\$ be a \$(2*, *)\$-UOWHF. Then for any \$(s_1,\\cdots,s_n) \\in \\bit^*\$, any \$n, t\\in\\mathbb{N}\$ and \$x\\in\\bit^{2^t\\cdot n}\$, we define
+\\[
+    H_{s_1,\\dots,s_n}(x)=(t,h_{s_t}(\\cdots(h_{s_2}(h_{s_1}(x)))\\cdots))
+\\]
+Also let \$\\mathcal{H} = \\{H_s\\}_{s \\in \\bit^*}\$.
+\\end{construction}
+\\begin{claim}
+    \$\\mathcal{H}\$ is a secure UOWHF.
+\\end{claim}
+The proof is similar to the one in Step II.\\\\
+
+We show how to use the arbitrary-length WOOF we constructed to boost this one-time, fixed-length digital signature scheme into a one-time, arbitrary-length digital signature scheme. 
+
+\\subsection{Removing Length-Restriction from One-Time Digital Signatures} 
+
+Let \$(\\Gen_\\ell, \\Sign_\\ell, \\Verify_\\ell)\$ be a length-restricted one-time digital signature for messages of length \$\\ell(n)\$. 
+Let \$h_s: \\{0,1\\}^* \\to \\{0,1\\}^n\$ be a WOOF. 
+First we will review an \\emph{insecure} first attempt at a construction for \$\\ell(n) = n\$: 
+\\begin{itemize}
+    \\item \$\\Gen^{\\text{BAD}}(1^n)\$: Run \$(pk_\\ell, sk_\\ell) \\leftarrow \\Gen_\\ell(1^n)\$, \$s \\leftarrow I(1^n)\$. Output \$((pk_\\ell,s),sk_\\ell)\$.
+
+    \\item \$\\Sign^{\\text{BAD}}(sk=sk_\\ell, m)\$: Output \$\\Sign_\\ell(sk_\\ell, h_s(m))\$. 
+
+    \\item \$\\Verify^{\\text{BAD}}(pk=(pk_\\ell,s), m, \\sigma)\$: Output \$\\Verify_\\ell(pk_\\ell, h_s(m), \\sigma)\$. 
+\\end{itemize}
+Notice that this construction does not work because the seed for the WOOF is revealed before the message is chosen, in which case WOOF security does not apply. 
+
+To avoid this, we can use the following construction for \$\\ell(n) = k(n) + n\$ where \$k(n)\$ is the length of the seed produced by \$I(1^n)\$: 
+\\begin{itemize}
+    \\item \$\\Gen(1^n)\$: Run \$(pk_\\ell, sk_\\ell) \\leftarrow \\Gen_\\ell(1^n)\$. Output \$(pk_\\ell,sk_\\ell)\$.
+
+    \\item \$\\Sign(sk=sk_\\ell, m)\$: Run \$s \\leftarrow I(1^n)\$ and \$\\sigma_\\ell \\leftarrow \\Sign_\\ell(sk_\\ell, s || h_s(m))\$. Output \$(\\sigma_\\ell, s)\$. 
+
+    \\item \$\\Verify(pk=pk_\\ell, m, \\sigma = (\\sigma_\\ell, s))\$: Output \$\\Verify_\\ell(pk_\\ell, s || h_s(m), \\sigma_\\ell)\$. 
+\\end{itemize}
+Note that now the seed is chosen after the message. 
+We will give a proof sketch of the security for this construction. 
+Assume for contradiction that we have a nu-PPT adversary \$\\adv\$ which succeeds with non-negligible probability at the digital signature security game for \$(\\Gen, \\Sign, \\Verify)\$. 
+We will now construct a nu-PPT adversary \$\\advb\$ who succeeds with non-negligible probability at the digital signature security game for \$(\\Gen_\\ell, \\Sign_\\ell, \\Verify_\\ell)\$, a contradiction. 
+\$\\advb\$ receives \$pk_\\ell\$ from its challenger and passes this along to \$\\adv\$. 
+When \$\\adv\$ queries the signing oracle with message \$m\$, \$\\advb\$ runs \$s \\leftarrow I(1^n)\$, computes \$m_{\\ell} = s || h_{s}(m)\$, queries its signing oracle with message \$m_{\\ell}\$ to receive \$\\sigma_\\ell\$ and returns \$\\sigma = (s, \\sigma_{\\ell})\$ to \$\\adv\$. 
+Finally, when \$\\adv\$ returns \$m^*, \\sigma^* = (s^*, \\sigma_{\\ell}^*)\$, \$\\advb\$ outputs \$m^*_{\\ell} = s^* || h_{s^*}(m^*), \\sigma_{\\ell}^*\$. 
+
+Since we have replicated the expected input distribution for \$\\adv\$, it will succeed with non-negligible probability. 
+Notice that \$\\advb\$ will succeed when \$\\adv\$ does as long as \$m^*_{\\ell} \\not = m_{\\ell}\$. 
+In analyzing the success probability of \$\\advb\$ we have two cases to consider based on whether \$s^* = s\$. 
+Notice that \$\\adv\$ must have non-negligible success either when \$s^* = s\$ or when \$s^* \\not = s\$ or both. 
+If \$\\Pr[s^* \\not = s \\land \\adv \\text{ succeeds}]\$ is non-negligible, then \$\\advb\$ also succeeds with non-negligible probability since \$m^*_{\\ell} = s^* || h_{s^*}(m^*) \\not = s || h_{s}(m) = m_{\\ell}\$ in this case. 
+Now assume that \$\\Pr[s^* = s \\land \\adv \\text{ succeeds}]\$ is non-negligible. When \$\\adv\$ succeeds in this case, it must have found \$m^* \\not = m\$, and so \$h_{s^*}(m^*) = h_{s}(m)\$ with only negligible probability because otherwise WOOF security is broken. 
+Thus with non-negligible probability \$m^*_{\\ell} \\not = m_{\\ell}\$ and \$\\advb\$ succeeds as well. 
+Therefore either way \$\\advb\$ succeeds in the digital signature game against \$(\\Gen_\\ell, \\Sign_\\ell, \\Verify_\\ell)\$ with non-negligible probability. 
+
+\\section{Multiple-Message Digital Signatures} 
+
+Now we will show how to covert this one-time, no-length restriction digital signature scheme \$(\\Gen, \\Sign, \\Verify)\$ into a ef-ema no-length restriction digital signature scheme by utilizing a pseudorandom function \$PRF\$. 
+For each \$\\alpha \\in \\{\\epsilon\\} \\cup \\{0,1\\}^{\\leq n}\$, let \$pk_\\alpha, sk_\\alpha = \\Gen(1^n; PRF_s(\\alpha 10 \\ldots 0))\$ such that \$|\\alpha 10 \\ldots 0| = n+1\$ (i.e. \$\\Gen\$ is run with randomness determined by the PRF on an input specified by \$\\alpha\$). 
+We will use these to make a tree of keys so that the keys used for each message will be distinct with high probability, so WOOF security will continue to apply each time the scheme is used. 
+Note that whenever \$\\Sign\$ is called, we require the WOOF to be run with a deterministic seed \$s_{\\alpha}^W = PRF_{s'}(\\alpha 10 \\ldots 0)\$. 
+This way paths through the tree will deterministically map to the corresponding signatures. 
+The construction is as follows: 
+\\begin{itemize}
+    \\item \$\\mathsf{GEN}(1^n)\$: Output \$(pk_\\epsilon, s \\leftarrow \\{0,1\\}^n)\$, namely the root public key and the seed for the PRF so the rest of the keys can be generated. 
+
+    \\item \$\\mathsf{SIGN}(sk, m)\$: 
+    \\begin{enumerate}
+        \\item Draw a random path through the key tree \$r \\leftarrow \\{0,1\\}^n\$. 
+
+        \\item Now use the secret key at each level to sign its children's public keys and continue to do this along the random path until a leaf is hit, i.e. iteratively sign the random path and its co-path. 
+        Namely, for each \$i = 0, 1, \\ldots, n-1\$, let \$\\alpha_i = r_1 r_2 \\cdots r_i\$, \$m_i = pk_{\\alpha_i || 0} || pk_{\\alpha_i || 1}\$, and \$\\sigma_i = \\Sign(sk_{\\alpha_i}, m_i)\$. 
+
+        \\item Let \$\\sigma_n = \\Sign(sk_r, m)\$. 
+
+        \\item Output \$\\Sigma = (r, m_0, \\sigma_0, \\ldots, m_{n-1}, \\sigma_{n-1}, \\sigma_n)\$. 
+    \\end{enumerate} 
+
+    \\item \$\\mathsf{VERIFY}(pk, m, \\Sigma = (r, \\sigma_0, \\ldots, \\sigma_{n-1}, \\sigma_n))\$: Use \$r\$ and the \$m_i\$ to determine \$pk_{\\alpha_i}\$ and for each \$i \\in [n]\$ run \$\\Verify(pk_{\\alpha_i}, m_i, \\sigma_i)\$, accepting if all of those do. 
+\\end{itemize}
+The idea is that because the root \$pk_{\\epsilon}\$ is trusted and the corresponding secret keys of one level are used to validate the \$pk\$ of the level below, trust is maintained down the path and the ultimate \$pk_r\$ can be trusted to be used to check the signature on \$m\$ itself. 
+
+We will now give a proof sketch for the security of this construction. 
+Assume for contradiction that we have a nu-PPT adversary \$\\adv\$ which succeeds with non-negligible probability at the digital signature security game for \$(\\mathsf{GEN}, \\mathsf{SIGN}, \\mathsf{VERIFY})\$. 
+Let \$\\adv\$'s interaction with this security game be called Hybrid \$H_0\$. 
+First we will consider the hybrid \$H_1\$ where the PRF is replaced by a truly random function. 
+\$\\adv\$'s success probability in \$H_1\$ is still some non-negligible \$\\epsilon(n)\$ due to PRF security. 
+Now we will consider the hybrid \$H_2\$ where if the randomness returned by any two of the signing oracle queries is equal, i.e. \$r_j = r_{j'}\$ for some distinct \$j, j' \\in [q]\$, then \$\\adv\$ aborts. 
+Notice that the probability of this happening is only \$q^2/2^n\$, a negligible amount, so \$\\adv\$'s success probability \$\\epsilon(n) - q^2/2^n\$ remains non-negligible. 
+Thus going forward we can assume that the randomness \$r_j\$ used by the oracle to sign each query \$m_j\$ is distinct. 
+
+Now notice that either \$\\adv\$ outputs a message-signature pair \$(M^*, \\Sigma^*)\$ which uses \$r^* = r_j\$ for some \$j \\in [q]\$ or \$r^* \\not = r_j\$ for all \$j \\in [q]\$. 
+We will give some intuition for what happens in each of these cases. 
+In the first case, since signatures in this scheme are deterministic, to succeed \$\\adv\$'s signatures must be the same as \$\\Sigma_j\$'s along the path \$r^* = r_j\$ until doing a forgery at the leaf, breaking the \$(\\Gen, \\Sign, \\Verify)\$ scheme for \$M^*\$ which is distinct from all of the \$m_j\$ queries. 
+In the second case, \$\\adv\$ goes along a path \$r^* \\not = r_j\$, so at the first node which diverges from all \$r_j\$ it must forge a signature that verifies with an honest public key from the level above, breaking the \$(\\Gen, \\Sign, \\Verify)\$ scheme for the corresponding \$\\alpha_i^*\$ which is distinct from all of the other \$\\alpha_i^j\$ that were used to answer queries. 
+
+This can be formalized by constructing a nu-PPT adversary \$\\advb\$ for the one-time digital signature security game of \$(\\Gen, \\Sign, \\Verify)\$ who takes the \$pk\$ it's been given and guesses which query \$\\adv\$ forges for, using its \$pk\$ and one-time oracle to provide a signature for that query and otherwise answering honestly using self-generated keys. 
+This degrades \$\\advb\$'s probability of success by \$\\epsilon(n)/q\$ which is still non-negligible. 
+
+Next, after introducing collision resistant hash functions, we will see a different, though closely related, alternate construction for multiple-message digital signatures. 
+
+
+\\section{Collision Resistant Hash Functions}
+
+As the name suggests, collision resistant hash function family is a set of hash functions \$H\$ such that for a function \$h\$ chosen randomly from the family, it is computationally hard to find two different inputs \$x,x'\$ such that \$h(x) = h(x')\$. We now give a formal definition.
+
+\\subsection{Definition of a family of CRHF}
+
+A set of function ensembles
+\\[ \\{H_n = \\{h_i : D_n \\to R_n \\}_{i \\in I_n} \\}_n\\]
+where \$|D_n| < |R_n|\$ is a family of collision resistant hash function ensemble if there exists efficient algorithms \$(\\Sampler,\\Eval)\$ with the following syntax:
+\\begin{enumerate}
+\\item \$\\Sampler(1^n) \\to i:\$ On input \$1^n\$, \$\\Sampler\$ outputs an index \$i \\in I_n\$.
+\\item \$\\Eval(i,x) = h_i(x):\$ On input \$i\$ and \$x \\in D_n\$, \$\\Eval\$ algorithm outputs \$h_i(x)\$. 
+\\item \$\\forall\$ PPT \$\\adv\$ we have
+\\[\\Pr[i \\gets \\Sampler(1^n), (x,x') \\gets \\adv(1^n,i) : h_i(x) = h_i(x') \\wedge x \\neq x'] \\leq \\negl(n)\\]
+\\end{enumerate}
+
+
+\\subsection{Collision Resistant Hash functions from Discrete Log}
+We will now give a construction of collision resistant hash functions from the discrete log assumption. We first recall the discrete log assumption:
+\\begin{definition}[Discrete-Log Assumption]
+We say that the discrete-log assumption holds for the group ensemble \$\\mathcal{G} =\\{ \\mathbb{G}_n\\}_{n \\in \\mathbb{N}}\$, if for every non-uniform PPT algorithm \$\\mathcal{A}\$ we have that
+\\[\\mu_\\mathcal{A}(n) := \\Pr_{x \\leftarrow |G_n|}[\\mathcal{A}(g,g^x) = x]\\]
+is a negligible function.
+\\end{definition}
+
+We now give a construction of collision resistant hash functions.  
+
+\\begin{itemize}
+\\item \$\\Sampler(1^n):\$ On input \$1^n\$, the sampler does the following:
+\\begin{enumerate}
+    \\item It chooses \$x \\gets |\\mathbb{G}_n|\$.
+    \\item It computes \$h = g^x\$.
+    \\item It outputs \$(g,h)\$.
+
+\\end{enumerate}
+\\item \$\\Eval((g,h),(r,s)):\$ On input \$(g,h)\$ and two elements \$(r,s) \\in |\\mathbb{G}_n|\$, \$\\Eval\$ outputs \$g^rh^s\$.
+\\end{itemize}
+
+We now argue that this construction is collision resistant. Assume for the sake of contradiction that an adversary gives a collision \$(r_1,s_1) \\neq (r_2,s_2)\$. We will now use this to compute the discrete logarithm of \$h\$. We first observe that:
+\\begin{eqnarray*}
+r_1+xs_1 &=& r_2 + xs_2\\\\
+(r_1 - r_2) &=& x(s_2 - s_1)
+\\end{eqnarray*}
+We infer that \$s_2 \\neq s_1\$. Otherwise, we get that \$r_1 = r_2\$ and hence, \$(r_1,s_1) = (r_2,s_2)\$. Thus, we can compute \$x = \\frac{r_1-r_2}{s_1 - s_2}\$ and hence the discrete logarithm of \$h\$ is computable.
+
+
+\\section{CRHF-Based Multiple-Message Digital Signature}
+
+We now explain how to combine collision-resistant hash functions and one-time signatures to get a signature scheme for multiple messages. We first construct an intermediate primitive wherein we will still have the same security property as that of one-time signature but we would be able to sign messages longer than the length of the public-key.\\footnote{Note that in the one-time signature scheme that we constructed earlier, the length of message that can be signed is same as the length of the public-key.}
+
+
+\\subsection{One-time Signature Scheme for Long Messages}
+We first observe that the CRHF family \$H\$ that we constructed earlier compresses \$2n\$ bits to \$n\$ bits (also called as 2-1 CRHF). We will now give an extension that compresses an arbitrary long string to \$n\$ bits using a 2-1 CRHF.
+\\paragraph{Merkle-Damgard CRHF.} The sampler for this CRHF is same as that of 2-1 CRHF. Let \$h\$ be the sampled hash function. To hash a string \$x\$, we do the following. Let \$x\$ be a string of length \$m\$ where \$m\$ is an arbitrary polynomial in \$n\$. We will assume that \$m = kn\$ (for some \$k\$) or otherwise, we can pad \$x\$ to this length. We will partition  the string \$x\$ into \$k\$ blocks of length \$n\$ each. For simplicity, we will assume that \$k\$ is a perfect power of \$2\$ or we will again pad \$x\$ appropriately. We will view these \$k\$-blocks as the leaves of a complete binary tree of depth \$\\ell = \\log_2 k\$. Each intermediate node is associated with a bit string \$y\$ of length at most \$\\ell\$ and the root is associated with the empty string. We will assign a \$\\tag \\in \\bin^n\$ to each node in the tree. The \$i\$-th leaf is assigned \$\\tag_i\$ equal to the \$i\$-block of the string \$x\$. Each intermediate node \$y\$ is assigned a \$\\tag_y = h(\\tag_{y\\|0}\\| \\tag_{y \\| 1})\$. The output of the hash function is set to be the \$\\tag\$ value of the root. Notice that if there is a collision for this CRHF then there are exists one intermediate node \$y\$ such that for two different values \$\\tag_{y\\|0},\\tag_{y\\|1}\$ and \$\\tag'_{y\\|0},\\tag'_{y\\|1}\$ we have, \$h(\\tag_{y\\|0},\\tag_{y\\|1}) = \\tag'_{y\\|0},\\tag'_{y\\|1}\$. This implies that there is a collision for \$h\$. 
+
+\\paragraph{Construction.} We will now use the Merkle-Damgard CRHF and the one-time signature scheme that we constructed earlier to get a one-time signature scheme for signing longer messages. The main idea is simple: we will sample a \$(sk,vk)\$ for signing \$n\$-bit messages and to sign a longer message, we will first hash it using the Merkle-Damgard hash function to \$n\$-bits and then sign on the hash value. The security of the construction follows directly from the security of the one-time signature scheme since the CRHF is collision-resistant. 
+
+\\subsection{Signature Scheme for Multiple Messages}
+We will now describe the construction of signature scheme for multiple messages. Let \$(\\Gen',\\Sign',\\Verify')\$ be a one-time signature scheme for signing longer messages. 
+\\begin{enumerate}
+    \\item \$\\Gen(1^n):\$ Run \$\\Gen'(1^n)\$ using to obtain \$sk,vk\$. Sample a PRF key \$K\$. The signing key is \$(sk,K)\$ and the verification key is \$vk\$.
+    \\item \$\\Sign((sk,K),m):\$ To sign a message \$m\$, do the following:
+    \\begin{enumerate}
+        \\item Parse \$m\$ as \$m_1m_2\\ldots m_{\\ell}\$ where each \$m_i \\in \\bin\$.
+        \\item Set \$sk_0 = sk\$ and \$m_0 = \\epsilon\$ (where \$\\epsilon\$ is the empty string).
+        \\item For each \$i \\in [\\ell]\$ do:
+        \\begin{enumerate}
+            \\item Evaluate \$\\PRF(m_1\\|\\ldots\\|m_{i-1}\\|0)\$ and \$\\PRF(m_1\\|\\ldots\\|m_{i-1}\\|1)\$ to obtain \$r_0\$ and \$r_1\$ respectively. Run \$\\Gen'(1^n)\$ using \$r_0\$ and \$r_1\$ as the randomness to obtain \$(sk_{i,0},vk_{i,1})\$ and \$(sk_{i,1},vk_{i,1})\$.
+            \\item Set \$\\sigma_i = \\Sign(sk_{i-1,m_{i-1}},vk_{i,0}\\|vk_{i,1})\$
+            \\item If \$i = \\ell\$, then set \$\\sigma_{\\ell+1} = \\Sign(sk_{i,m_i},m)\$.
+            
+        \\end{enumerate}
+        \\item Output \$\\sigma = (\\sigma_1,\\ldots,\\sigma_{\\ell+1})\$ along with all the verification keys as the signature.
+    \\end{enumerate}
+    \\item \$\\Verify(vk,\\sigma,m)\$: Check if all the signatures in \$\\sigma\$ are valid.
+\\end{enumerate}
+
+To prove security, we will first use the security of the PRF to replace the outputs with random strings. We will then use the security of the one-time signature scheme to argue that the adversary cannot mount an existential forgery.
+
+\\section{Trapdoor Permutations and RSA} 
+
+\\begin{definition}[Trapdoor Permutation] 
+A function family \$\\{f_s: D_s \\to D_s\\}_{s \\in \\{0,1\\}^*}\$ is a \\emph{one-way trapdoor permutation} if there exists PPT \$I, D, F, F^{-1}\$ such that 
+\\begin{itemize}
+    \\item \$(s, \\tau) \\leftarrow I(1^n)\$ produces the seed and trapdoor, 
+    
+    \\item \$D(s)\$ outputs a uniformly random element of \$D_s\$, 
+
+    \\item \$\\forall s \\in I(1^n), x \\in D_s\$, \$F(s, x) = f_s(x)\$, 
+
+    \\item \$\\forall (s, \\tau) \\in I(1^n), y \\in D_s\$, \$F^{-1}(\\tau, y) = f_s^{-1}(x)\$, and 
+
+    \\item \$f_s\$ is one-way. 
+\\end{itemize}
+\\end{definition} 
+
+The RSA trapdoor permutation construction is as follows: 
+\\begin{itemize} 
+    
+    \\item \$I_{RSA}(1^n) \\rightarrow (s = (N, e), \\tau = (N, d)\$ for \$N = PQ\$ for \$2^{n-1} \\leq P < Q \\leq 2^n\$ such that \$d = e^{-1} \\mod \\phi(n)\$ for \$e < N\$ which is coprime to \$\\phi(n) = (P-1)(Q-1)\$. 
+    Let \$D_s = \\{1, \\ldots, N\\}\$. 
+
+    \\item \$F_{RSA}(s, x) = x^e \\mod N\$. 
+
+    \\item \$F_{RSA}^{-1}(\\tau, x) = y^d \\mod N\$. 
+\\end{itemize}
+Unfortunately, under the assumption that factoring is hard, we still don't have a security proof for the RSA trapdoor permutation in the plain model. 
+However, we will see a proof in what's called the ``random oracle model'' next. 
+
+
+
+
+
+\\section{Random Oracle Model}
+
+We looked at RSA-FDH in the last section, and in this section we'll continue on and provide some semblance of a security analysis of the scheme.
+
+As a note, collision resistance of the hash function isn't quite enough for the security of the RSA-FDH scheme. In particular, if we can find three messages \$m_1, m_2, m_3\$ such that \$H(m_1) \\cdot H(m_2) = H(m_3) \\pmod{N}\$ (this isn't protected against with collision resistance), then we can break the scheme, assuming that we use the RSA trapdoor function. Here, we'd have
+\\begin{align*}
+    \\sigma_1 \\sigma_2 &= f^{-1}(H(m_1)) \\cdot f^{-1}(H(m_2)) \\\\
+                      &= H(m_1)^d H(m_2)^d \\pmod{N} \\\\
+                      &= (H(m_1) H(m_2))^d \\pmod{N} \\\\
+                      &= H(m_3)^d \\pmod{N}
+\\end{align*}
+Ideally, we'd like to have a proof of the security of this scheme, but nobody has been able to come up with one yet. Instead, we can only hope to find some kind of \\emph{evidence} for the security of the scheme.
+
+This evidence comes from the \\emph{random oracle model} (ROM), otherwise known as the \\emph{random oracle methodology}.
+
+Suppose we're given a scheme \$\\Pi^H = (A^H, B^H, C^H, \\ldots)\$, where calls to the hash function \$H\$ is explicit. (Some functions may not call the hash function, but that's okay.)
+
+We'd like to perform some analysis on these schemes, even though we may not fully understand the properties of the hash function---we'd like to abstract it out. To do this, we instead prove the security of \$\\Pi^O = (A^O, B^O, C^O, \\ldots)\$, where the hash function is replaced with an oracle \$O\$ for a truly random function.
+
+This oracle assumption is a very strong one, and is perhaps not the most indicative of the security of the original scheme---there are cases where the scheme \$\\Pi^O\$ under an oracle \$O\$ is secure, but replacing the oracle with \\emph{any} instantiation breaks the security of the scheme.
+
+When we're trying to prove security of \$\\Pi^O\$, we'll look at an adversary \$\\mathcal{A}^O\$, which has access to \$O\$. Here, observe that we can provide the answers to the oracle queries---we just need to find a contradiction to the existence of the function \$\\mathcal{A}\$, regardless of what the oracle \$O\$ does.
+
+Note here that the adversary \$\\mathcal{A}\$ in this case is forced to explicitly call the oracle for its hash function queries---the fact that we can see these calls is called \\emph{observability}. In the standard model, we can't actually see the queries that the adversary makes, since it just runs the predefined hash function itself.
+
+Another property is called \\emph{programmability}: since we're working with a random oracle, the only thing that matters is that the output of the oracle looks uniformly random. This means that we can replace a uniform output \$x\$ of the oracle with \$f(x)\$, for some one-way permutation \$f\$. This allows us to control some secret parameter that affects the output distribution of the oracle \$O\$. In the standard model, we don't have programmability---we again just have a fixed hash function that we can't change after the fact.
+
+\\begin{theorem}
+    RSA-FDH is EUF-CMA secure in the ROM, assuming \$\\{f_s\\}_s\$ is a secure family of trapdoor permutations.
+\\end{theorem}
+
+\\begin{proof}
+    Suppose we have an adversary \$\\mathcal{A}\$ in this model.
+
+    The first thing it is given is a public key \$\\mathrm{pk} = s\$. The adversary then gets to make signature queries: \$m \\mapsto f_t^{-1}(O(m))\$. At the very end, it must output a forged signature \$(m^*, \\sigma^*)\$. This adversary is also allowed to make separate hash queries to the random oracle: \$m \\mapsto O(m)\$. %TODO: draw the oracle calls at the top or the right side of the box
+
+    \\begin{center}
+        \\begin{tikzpicture}
+            \\draw (0, 0) rectangle (3, 4);
+            \\node at (0.25, 3.75) {\$\\mathcal{A}\$};
+
+            \\draw (-0.5, 3) edge[->] node[pos=0, left] {\$\\mathrm{pk} = s\$} (0.5, 3);
+
+            \\draw (-0.5, 2) edge[<-] node[pos=1, right] {\$m\$} (0.5, 2);
+            \\draw (-0.5, 1.5) edge[->] node[pos=1, right] {\$f_t^{-1}(O(m))\$} (0.5, 1.5);
+            \\node[anchor=east] at (-0.6, 1.75) {Signature queries};
+
+            \\draw (-0.5, 0.5) edge[<-] node[pos=1, right] {\$(m^*, \\sigma^*)\$} (0.5, 0.5);
+
+            \\draw (2.5, 3) edge[->] node[pos=0, left] {\$m\$} (3.5, 3);
+            \\draw (2.5, 2.5) edge[<-] node[pos=0, left] {\$O(m)\$} (3.5, 2.5);
+            \\node[anchor=west] at (3.6, 2.75) {Hash queries to \$O\$};
+        \\end{tikzpicture}
+    \\end{center}
+
+    WLOG, suppose that for every message \$m\$ that \$\\mathcal{A}^O\$ queries for a signature, it has already made a query for the same message to the hashing oracle. (Otherwise, we can simply make a wrapper around \$\\mathcal{A}^O\$ that does this.) We can also assume WLOG that when the adversary outputs \$(m^*, \\sigma^*)\$, it has also made the hashing query \$O(m^*)\$. Let's call this hybrid \$H_0\$.
+
+    For the hybrid \$H_1\$, we'll abort the machine if for any \$m, m'\$ in the hash queries, we have \$O(m) = O(m')\$, essentially removing all collisions from the oracle. This happens with negligible probability (\$q^2 / 2^n\$), so this hybrid is still indistinguishable from \$H_0\$.
+
+    Next, we'll construct an adversary \$\\mathcal{B}\$ using \$\\mathcal{A}\$, and inverts the trapdoor permutation. In particular, given \$(s, y^*)\$, where \$y^* = f^{-1}(x^*)\$, the goal is to output \$x^*\$.
+
+    Suppose \$\\mathcal{A}\$ makes \$q_s\$ signing queries and \$q_h\$ hashing queries.
+
+    We pass in \$s\$ as \$\\mathrm{pk}\$. \$\\mathcal{B}\$ first samples an \$i^* \\gets \\{1, \\ldots, q_h\\}\$. We then set the output of the \$i\$th hash query to \$y^*\$. In particular, we have \$O(m_{q_{i^*}}) = y^*\$. If the adversary happens to call a signing query on \$i^*\$, we'll abort.
+
+    We still need to specify what happens on all other queries, and we want to make sure that we can respond with a signature query on all of these other queries. For \$i \\ne i^*\$, we sample \$x \\in D_s\$, and compute \$y = f_s(x)\$. On the \$i\$th hashing query, we then set \$O(m_i) = y\$. If the adversary later requests a signature on the same \$m_i\$, then we output \$x\$ for the signing query. (This is because \$f^{-1}(O(m_i)) = f^{-1}(y) = x\$.)
+
+    In particular, the adversary must have called the hashing query for its output \$m^*\$, and with some probability, this is the \$i^*\$th query, in which case the message \$m^*\$ is our inverse \$x^*\$.
+
+    Analyzing the probabilities, we have that
+    \\begin{align*}
+        \\Pr(\\text{\$\\mathcal{B}\$ outputs \$f^{-1}(x^*)\$})
+            &= \\Pr(\\text{\$\\mathcal{A}\$ successful} \\land \\text{no sign query on \$m_{i^*}\$} \\land m^* = m_{q_i^*}) \\\\
+            &= \\varepsilon \\times \\left(1 - \\frac{1}{q_h}\\right)^{q_s} \\times \\frac{1}{q_h} \\\\
+            &\\approx \\frac{\\varepsilon}{q_h}
+    \\end{align*}
+    which is non-negligible, assuming \$\\mathcal{A}\$ is successful with non-negligible probability.
+\\end{proof}
+
+We'll now talk about a different scheme and analyze its security under the random oracle model.
+
+This scheme is called the \\emph{Schnorr signature scheme}. Given a group \$G\$ of prime order \$q\$ and a hash function \$H : \\{0, 1\\}^* \\to \\mathbb{Z}_q\$, we define
+\\begin{itemize}
+    \\item \$\\textsc{Gen}(1^n) = (\\mathrm{pk} = g^x, \\mathrm{sk} = x \\gets \\mathbb{Z}_q)\$
+    \\item \$\\textsc{Sign}(\\mathrm{sk}, m)\$:
+        \\begin{algorithmic}
+            \\State \$k \\gets \\mathbb{Z}_q\$
+            \\State \$r = g^k\$
+            \\State \$h = H(m \\concat r)\$
+            \\State \$s = k + hx\$
+            \\State \$\\sigma = (h, s)\$
+        \\end{algorithmic}
+
+    \\item \$\\textsc{Verify}(\\mathrm{pk}, m, \\sigma)\$:
+        \\begin{algorithmic}
+            \\State output \$h \\overset{?}{=} H(m \\concat \\frac{g^s}{\\mathrm{pk}^h})\$
+        \\end{algorithmic}
+\\end{itemize}
+
+\\begin{theorem}
+    The Schnorr signature scheme is EUF-CMA secure in the ROM, assuming the discrete log problem is hard.
+\\end{theorem}
+
+\\begin{proof}
+    The adversary \$\\mathcal{A}^O\$ gets a public key \$\\mathrm{pk} = g^x\$, can make signing queries \$m \\mapsto \\textsc{Sign}(x, m)\$ and hashing queries \$(m, z) \\mapsto O(m \\concat z)\$, for \$z \\in G\$. \$\\mathcal{A}\$ then returns a forgery \$(m^*, \\sigma^*)\$.
+    \\begin{center}
+        \\begin{tikzpicture}
+            \\draw (0, 0) rectangle (3, 4);
+            \\node at (0.25, 3.75) {\$\\mathcal{A}\$};
+
+            \\draw (-0.5, 3) edge[->] node[pos=0, left] {\$\\mathrm{pk} = g^x\$} (0.5, 3);
+
+            \\draw (-0.5, 2) edge[<-] node[pos=1, right] {\$m\$} (0.5, 2);
+            \\draw (-0.5, 1.5) edge[->] node[pos=1, right] {\$\\sigma = \\textsc{Sign}(x, m)\$} (0.5, 1.5);
+            \\node[anchor=east] at (-0.6, 1.75) {Signature queries};
+
+            \\draw (-0.5, 0.5) edge[<-] node[pos=1, right] {\$(m^*, \\sigma^*)\$} (0.5, 0.5);
+
+            \\draw (2.5, 3) edge[->] node[pos=0, left] {\$(m, z)\$} (3.5, 3);
+            \\draw (2.5, 2.5) edge[<-] node[pos=0, left] {\$O(m \\concat z)\$} (3.5, 2.5);
+            \\node[anchor=west] at (3.6, 2.75) {Hash queries to \$O\$};
+        \\end{tikzpicture}
+    \\end{center}
+
+    WLOG, we can assume that \$m^* \\concat r^*\$ is in the list of hash queries (where \$r^*\$ was the value computed in the output signature \$\\sigma^*\$).
+
+    We'll define a modified signing algorithm as follows:
+    \\begin{algorithmic}
+        \\Function{Sign'}{\$\\mathrm{sk}, m\$}
+        \\State \$h, s \\in \\mathbb{Z}_q\$ uniformly
+        \\State \$g^k \\gets \\frac{g^s}{g^{hx}} = \\frac{g^s}{\\mathrm{pk}^h}\$
+        \\State \$h = H(m \\concat g^k)\$
+        \\State output \$(h, s)\$
+        \\EndFunction
+    \\end{algorithmic}
+    The main idea here is to provide a random signature, consistent with the definition of \$\\textsc{Sign}\$, so that \\textsc{Verify} will still succeed.
+
+    We'll then define a wrapper \$\\mathcal{A}'^{O}\$, which performs these modified signing queries by itself, since it no longer requires the secret key \$x\$. As such, \$\\mathcal{A}'^O\$ only makes hashing queries, and produces \$(m^*, \\sigma^*)\$. In particular, \$\\mathcal{A}'\$ depends on \$\\mathrm{pk}, q_1, h_1, \\ldots, q_H, h_H\$, but all of the queries \$q_1, \\ldots, q_H\$ are deterministic depending on the previous hash output (or dependent on pk in the case of \$q_1\$). This means that \$\\mathcal{A}'\$ can actually be thought of as a function of
+    \\[
+        \\mathcal{A}'(\\mathrm{pk}, h_1, h_2, \\ldots, h_H)
+    .\\]
+    The main insight that we'll use is that we can run \$\\mathcal{A}'\$ until the \$(i^* - 1)\$th query, and on the \$i^*\$th query, we run the adversary twice, on two different possible responses: \$h_{i^*}\$ and \$h'_{i^*}\$. These two executions share the first \$i^* - 1\$ hashing queries, and both are perfectly valid executions of the adversary. We'll use these two executions to break the discrete log problem.
+
+    Let us define \$\\mathcal{B}\$ that breaks the discrete log problem, given as input \$(g, g^x)\$. Here, we'll let \$g^x\$ be the public key.
+
+    In response to hashing queries, if \$\\mathcal{A}'\$ asks for the hash of \$m \\concat z\$, we respond with a random value (or the same value as before if queried multiple times) as \$O(m \\concat z)\$.
+
+    Now, we'd like to be able to find \$x\$, utilizing the behavior of \$\\mathcal{A}'\$.
+    At the \$i^*\$th query, we run the adversary twice, with \$h_{i^*}\$ as the hash in the first execution, and \$h'_{i^*}\$ as the hash in the second execution. In the first execution, we would have gotten queries \$q_{i^*}, q_{i^*+1}, \\ldots, q_h\$, and outputted \$(m^*, \\sigma^*)\$. In the second execution we would have gotten queries \$q_{i^*}', q_{i^*+1}', \\ldots, q_h'\$, and outputted \$(m'^*, \\sigma'^*)\$.
+
+    Now, in the \$i^*\$th query, note that \$s = k + hx\$ in the first execution, and \$s' = k + h' x\$ in the second execution. Crucially, the value of \$k\$ is the same here, since the query utilizes the same value of \$r\$, and we can solve for \$x = \\frac{s - s'}{h - h'}\$.
+
+    The probability that the adversary \$\\mathcal{A}'\$ succeeds in producing a forgery while utilizing \$i^*\$ is \$\\mu(n) = \\varepsilon(n) / q_h\$. For ease, let us also define the two halves of the input to \$\\mathcal{A}'\$ as \$\\alpha = (\\mathrm{pk}, h_1, \\ldots, h_{i^* - 1})\$ and \$\\beta = (h_{i^*}, \\ldots, h_{q_h})\$. We then define the ``good set'' as
+    \\[
+        S = \\left\\{\\alpha \\mid \\Pr_{\\beta}(\\mathcal{A}'(\\alpha, \\beta)\\ \\text{outputs a forgery}) \\ge \\frac{\\mu(n)}{2}\\right\\}
+    .\\]
+    We can also see that \$\\Pr(\\alpha \\in S) \\ge \\frac{\\mu(n)}{2}\$; to see why, suppose by contradiction \$\\Pr(\\alpha \\in S) < \\frac{\\mu(n)}{2}\$. Here, we have
+    \\begin{align*}
+        \\Pr(\\text{\$\\mathcal{A}'\$ succeeds}) &= \\Pr(\\text{\$\\mathcal{A}'\$ succeeds} \\mid \\alpha \\in S) \\Pr(\\alpha \\in S) + \\Pr(\\text{\$\\mathcal{A}'\$ succeeds} \\mid x \\notin S) \\Pr(\\alpha \\notin S) \\\\
+                                            &< 1 \\cdot \\frac{\\mu(n)}{2} + \\frac{\\mu(n)}{2} \\cdot 1 < \\mu(n)
+    \\end{align*}
+    which is a contradiction.
+
+    The probability that \$\\mathcal{B}\$ succeeds is thus
+    \\[
+        \\Pr(\\alpha \\in S) \\Pr(\\text{\$\\mathcal{A}'(\\alpha, \\beta)\$ succeeds} \\mid \\alpha \\in S) \\Pr(\\text{\$\\mathcal{A}'(\\alpha, \\beta')\$ succeeds} \\mid \\alpha \\in S)
+        \\ge \\left(\\frac{\\mu(n)}{2}\\right)^3
+    ,\\]
+    due to the definition of \$S\$ from earlier.
+
+    This means that in total, our probability of success is
+    \\[
+        \\Pr(\\text{\$\\mathcal{B}\$ succeeds}) \\ge \\frac{\\varepsilon^3(n)}{8q_h^3}
+    ,\\]
+    which is non-negligible if \$\\mathcal{A}'\$ succeeds with non-negligible probability, giving us our contradiction.
+\\end{proof}
+
+
