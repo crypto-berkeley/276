@@ -1,24 +1,23 @@
 \chapter{Mathematical Background}
 \label{sec:mb}
 
+This chapter establishes the mathematical foundations necessary for modern cryptography. The concepts introduced here --- probabilistic polynomial-time adversaries, negligible probabilities, and computational hardness assumptions --- form the bedrock upon which all cryptographic security definitions rest. Understanding these foundations is crucial because they allow us to formalize what it means for a cryptographic scheme to be "secure" in a way that is both mathematically rigorous and practically meaningful.
+
 In modern cryptography, (1) we typically assume that our attackers cannot run in unreasonably large amounts of time, and (2) we allow security to be broken with a \emph{very small}, but non-zero, probability.
+Without these assumptions, we must work in the realm of information-theoretic cryptography, which is often unachievable or impractical for many applications. For example, the one-time pad\footnote{For a message $m \in \{0,1\}^n$ and a random key $k \in \{0,1\}^n$, the encryption of $m$ is $c = m \oplus k$. The decryption is $m = c \oplus k$.}
+--- an information-theoretically secure cipher --- is not very useful because it requires very large keys.
 
-Without these assumptions, we must work in the realm of information-theoretic cryptography, which is often unachievable or impractical for many applications. For example, the one-time pad
-\footnote{For a message $m \in \{0,1\}^n$ and a random key $k \in \{0,1\}^n$, the encryption of $m$ is $c = m \oplus k$. The decryption is $m = c \oplus k$.}
--- an information-theoretically secure cipher -- is not very useful because it requires very large keys.
-
-In this chapter, we define items (1) and (2) more formally. We require our adversaries to run in polynomial time, which captures the idea that their runtime is not unreasonably large (sections~\ref{ssec:ppt}). We also allow security to be broken with negligible -- very small -- probability (section ~\ref{ssec:nnf}). 
-
+Below, we define items (1) and (2) more formally. We require our adversaries to run in polynomial time, which captures the idea that their runtime is not unreasonably large (sections~\ref{ssec:ppt}). We also allow security to be broken with very small, or negligible, probability (section ~\ref{ssec:nnf}). 
 
 \section{Probabilistic Polynomial Time}
 \label{ssec:ppt}
-A probabilistic Turing Machine is a generic computer that is allowed to make random choices during its execution. A probabilistic \textit{polynomial time} Turing Machine is one which halts in time polynomial in its input length. More formally:
+A probabilistic Turing Machine is a generic computer that is allowed to make random choices during its execution. This randomness is essential in cryptography: adversaries may use randomness in their attacks, and cryptographic algorithms themselves require randomness for security. A probabilistic \textit{polynomial time} Turing Machine is one which halts in time polynomial in its input length. Note that any deterministic polynomial-time algorithm is trivially a PPT algorithm (it simply ignores its random tape), but the converse is not necessarily true---probabilistic algorithms can sometimes solve problems more efficiently than deterministic ones. More formally:
 
 \begin{definition}[Probabilistic Polynomial Time]
 A probabilistic Turing Machine $M$ is said to be PPT (a Probabilistic Polynomial Time Turing Machine) if $\exists c \in \mathbb{Z}^+$ such that $\forall x \in\{0,1\}^*$, $M(x)$ halts in $|x|^c$ steps.
 \end{definition}
 
-A {\em non-uniform} PPT Turing Machine is a collection of machines one for each input length, as opposed to a single machine that must work for all input lengths.
+A {\em non-uniform} PPT Turing Machine is a collection of machines one for each input length, as opposed to a single machine that must work for all input lengths. Non-uniformity allows each machine $M_n$ to have "advice" specific to inputs of length $n$, which can be thought of as a polynomial-sized lookup table. This models adversaries who may have precomputed information or special knowledge about specific input lengths. While non-uniform PPT is a stronger model than uniform PPT (any uniform PPT algorithm is also non-uniform PPT), it is often more convenient for security reductions and captures realistic adversarial capabilities.
 
 \begin{definition}[Non-uniform PPT]
 A non-uniform PPT machine is a sequence of Turing Machines $\{ M_1, M_2, \cdots \}$ such that $\exists c \in \mathbb{Z}^+$ such that $\forall x \in\{0,1\}^*$, $M_{|x|}(x)$ halts in $|x|^c$ steps.
@@ -41,8 +40,19 @@ A function $\mu(\cdot): \mathbb{Z}^+ \rightarrow [0,1]$ is noticeable iff $\exis
 A function $\mu(\cdot): \mathbb{Z}^+ \rightarrow [0,1]$ is negligible iff $\forall c \in \mathbb{Z}^+ \; \exists n_0 \in \mathbb{Z}^+$ such that $\forall n \geq n_0 , \; \mu(n) < n^{-c}$.
 \end{definition}
 
-\paragraph{Example.} $\mu(n) = 2^{-n}$ is an example of a negligible function. This can be observed as follows.
-Consider an arbitrary $c \in \mathbb{Z}^+$ and set $n_0 = c^2$. Now, observe that for all $n \geq n_0$, we have that $\frac{n}{\log_2 n} \geq \frac{n_0}{\log_2 n_0} > \frac{n_0}{\sqrt{n_0}} = \sqrt{n_0} = c$. This allows us to conclude that $$\mu(n) = 2^{-n} = n^{-\frac{n}{\log_2 n}} < n^{-c}.$$
+\paragraph{Example.} $\mu(n) = 2^{-n}$ is an example of a negligible function. Figure~\ref{fig:negligible} illustrates how $2^{-n}$ decays exponentially and is eventually smaller than any polynomial bound $n^{-c}$ for sufficiently large $n$. This can be observed as follows.
+Consider an arbitrary $c \in \mathbb{Z}^+$ and set $n_0 = c^2$. We will show that for all $n \geq n_0$, we have $\mu(n) = 2^{-n} < n^{-c}$.
+
+First, we establish that $2^{-n} = n^{-\frac{n}{\log_2 n}}$. This follows from taking logarithms: 
+$$\log_2(2^{-n}) = -n = \log_2(n^{-\frac{n}{\log_2 n}}) = -\frac{n}{\log_2 n} \cdot \log_2 n = -n.$$
+
+Now, we need to show that for $n \geq n_0 = c^2$, we have $\frac{n}{\log_2 n} \geq c$. Since the function $f(n) = \frac{n}{\log_2 n}$ is increasing for $n \geq e$, it suffices to show that $f(c^2) \geq c$. We have:
+$$f(c^2) = \frac{c^2}{\log_2(c^2)} = \frac{c^2}{2\log_2 c} = \frac{c}{2} \cdot \frac{c}{\log_2 c}.$$
+
+For $c \geq 4$, we have $\frac{c}{\log_2 c} \geq 2$ (since $4/\log_2 4 = 2$ and the function $c/\log_2 c$ is increasing for $c \geq e$), so $f(c^2) \geq \frac{c}{2} \cdot 2 = c$. For $c \in \{1,2,3\}$, we can verify directly: $f(1) = 0$, $f(4) = 2$, $f(9) \approx 2.85$, so we may need to choose a larger $n_0$ for small $c$. However, since we only need existence of some $n_0$, we can set $n_0 = \max(c^2, 16)$ for $c \leq 3$, and then $f(n_0) \geq f(16) = 4 \geq c$.
+
+Therefore, for $n \geq n_0$, we have $\frac{n}{\log_2 n} \geq c$, which implies $-\frac{n}{\log_2 n} \leq -c$. Since $n > 1$, this gives us:
+$$\mu(n) = 2^{-n} = n^{-\frac{n}{\log_2 n}} \leq n^{-c}.$$
 
 Thus, we have proved that for any $c \in \mathbb{Z}^+$, there exists $n_0 \in \mathbb{Z}^+$ such that for any $n \geq n_0$, $\mu(n) < n^{-c}$.
 
@@ -53,36 +63,42 @@ Note that this requirement is satisfied as long as $\mu(n) > n^{-c}$ for infinit
 Below we give example of a function $\mu(\cdot)$ that is neither negligible nor noticeable.
 $$\mu(n) = \Big\{
 \begin{array}{ll}
-  2^{-n} & : x \mod 2 = 0\\
-  n^{-3} & : x \mod 2 \neq 0
+  2^{-n} & : n \mod 2 = 0\\
+  n^{-3} & : n \mod 2 \neq 0
 \end{array}
 $$
-This function is obtained by interleaving negligible and  noticeable functions. It cannot be negligible (resp., noticeable) because it is greater (resp., less) than an inverse-polynomially function for infinitely many input choices.
+This function is obtained by interleaving negligible and  noticeable functions. For even $n$, $\mu(n) = 2^{-n}$ which is negligible. For odd $n$, $\mu(n) = n^{-3}$ which is noticeable. Specifically, it's not negligible because $\mu(n) = n^{-3} > n^{-4}$ for all odd $n$, violating the definition. It's not noticeable because $\mu(n) = 2^{-n} < n^{-c}$ for any fixed $c$ and all sufficiently large even $n$, so there's no $n_0$ such that $\mu(n) > n^{-c}$ for all $n \geq n_0$.
 
 \paragraph{Properties of Negligible Functions.} Sum and product of two negligible functions is still a negligible function. We argue this for the sum function below and defer the problem for products to Exercise~\ref{ex:product}. These properties together imply that any polynomial function of a negligible function is still negligible.
 
-\begin{exercise}
-If $\mu(n)$ and $\nu(n)$ are negligible functions from domain $\mathbb{Z}^+$ to range $[0,1]$ then prove that the following functions are also negligible:
+\paragraph{Practical Intuition.} To build intuition, consider that a negligible probability means the event is so rare it's essentially impossible in practice. For example, if a cryptographic scheme has a negligible probability $\mu(n) = 2^{-128}$ of being broken, this is smaller than the probability of being struck by lightning twice in one's lifetime (approximately $10^{-12}$). Even for $n = 64$, we have $2^{-64} \approx 5 \times 10^{-20}$, which is astronomically small. This is why we can safely ignore negligible probabilities when reasoning about cryptographic security.
+
+\begin{exercise}\label{ex:product}
+If $\mu(n)$ and $\nu(n)$ are negligible functions from domain $\mathbb{Z}^+$ to range $[0,1]$ then prove that the following functions are also negligible functions:
 \begin{enumerate}
     \item $\psi_1(n) = \frac{1}{2} \cdot \left(\mu(n) + \nu(n)\right)$
     \item $\psi_2(n) = \min\{\mu(n) + \nu(n), 1\}$
     \item $\psi_3(n) = \mu(n)\cdot \nu(n)$
     \item $\psi_4(n) = \mathsf{poly}(\mu(n))$, where $\mathsf{poly}(\cdot)$ is an unspecified polynomial function. (Assume that the output is also clamped to $[0,1]$ to satisfy the definition)
-\end{enumerate}function.
+\end{enumerate}
 \end{exercise}
 \proof 
 $ $
 \begin{enumerate}
-    \item We need to show that for any $c \in \mathbb{Z}^+$, we can find $n_0$ such that $\forall n \geq n_0$, $\psi_1(n) \leq n^{-c}$. Our argument proceeds as follows. Given the fact that $\mu$ and $\nu$ are negligible we can conclude that there exist $n_1$ and $n_2$ such that $\forall n \geq n_1$, $\mu(n) < n^{-c}$ and $\forall n \geq n_2$, $g(n) < n^{-c}$. Combining the above two facts and setting $n_0 = \max(n_1, n_2)$ we have that for every $n \geq n_0$,
+    \item We need to show that for any $c \in \mathbb{Z}^+$, we can find $n_0$ such that $\forall n \geq n_0$, $\psi_1(n) \leq n^{-c}$. Our argument proceeds as follows. Given the fact that $\mu$ and $\nu$ are negligible we can conclude that there exist $n_1$ and $n_2$ such that $\forall n \geq n_1$, $\mu(n) < n^{-c}$ and $\forall n \geq n_2$, $\nu(n) < n^{-c}$. Combining the above two facts and setting $n_0 = \max(n_1, n_2)$ we have that for every $n \geq n_0$,
     \begin{align*}
         \psi_1(n) &= \frac{1}{2} \cdot (\mu(n) + \nu(n)) < \frac{1}{2} \cdot (n^{-c} + n^{-c}) = n^{-c}
     \end{align*}
     Thus, $\psi_1(n) \leq n^{-c}$ and hence is negligible.
 
-    \item We need to show that for any $c \in \mathbb{Z}^+$, we can find $n_0$ such that $\forall n \geq n_0$, $\psi_2(n) \leq n^{-c}$. Given the fact that $\mu$ and $\nu$ are negligible, there exist $n_1$ and $n_2$ such that $\forall n \geq n_1$, $\mu(n) \leq n^{-c-1}$ and $\forall n \geq n_2$, $g(n) \leq n^{-c-1}$. Setting $n_0 = \max(n_1, n_2, 3)$ we have that for every $n \geq n_0$,
+    \item We need to show that for any $c \in \mathbb{Z}^+$, we can find $n_0$ such that $\forall n \geq n_0$, $\psi_2(n) \leq n^{-c}$. Given the fact that $\mu$ and $\nu$ are negligible, there exist $n_1$ and $n_2$ such that $\forall n \geq n_1$, $\mu(n) \leq n^{-c-1}$ and $\forall n \geq n_2$, $\nu(n) \leq n^{-c-1}$. Setting $n_0 = \max(n_1, n_2, 3)$ we have that for every $n \geq n_0$,
     \begin{align*}
-        \psi_2(n) &= \min\{\mu(n) + \nu(n), 1\} < n^{-c-1} + n^{-c-1} < n^{-c}
+        \psi_2(n) &= \min\{\mu(n) + \nu(n), 1\} < n^{-c-1} + n^{-c-1} = 2n^{-c-1} = 2n^{-1} \cdot n^{-c} \leq n^{-c}
     \end{align*}
+    since $n \geq 3$ implies $2n^{-1} \leq 1$.
+    \item The proof that $\psi_3(n) = \mu(n) \cdot \nu(n)$ is negligible follows similarly: since both $\mu(n)$ and $\nu(n)$ are less than $n^{-c}$ for sufficiently large $n$, their product is less than $n^{-2c} < n^{-c}$.
+    
+    \item For $\psi_4(n) = \mathsf{poly}(\mu(n))$, since $\mu(n)$ is negligible, we have $\mu(n) < n^{-c}$ for any $c$ and sufficiently large $n$. If $\mathsf{poly}$ is a polynomial of degree $d$, then $\mathsf{poly}(\mu(n)) < \mathsf{poly}(n^{-c}) = O(n^{-cd})$, which is still negligible. The details are left as an exercise.
 \end{enumerate}
 \qed
 
@@ -94,14 +110,14 @@ $ $
 
 \section{Computationally  Hard Problems}\label{sec:assumptions}
 %So far, much of our investigation relied on the existence of one-way-functions or in certain cases on the existence of one-one one-way functions. However, just the mere existence of an object is not enough for real-world implementations. 
-We will next provide certain number theoretical problems that are conjectured to be computationally intractable. We will use the conjectured hardness of these problems in subsequent chapters to o provide concrete instantiations.
+We will next provide certain number theoretical problems that are conjectured to be computationally intractable. We will use the conjectured hardness of these problems in subsequent chapters to provide concrete instantiations. These assumptions---discrete logarithm, Diffie-Hellman, and factoring---form the foundation for most practical public-key cryptography. They have been studied for decades and are widely believed to be hard, though proving their hardness would resolve major open problems in complexity theory (such as showing $P \neq NP$).
 
 \subsection{The Discrete-Log Family of Problem}
 Consider a group $\mathbb{G}$ of prime order. For example, consider the group $\mathbb{Z}_p^*$ where $p$ is a large prime. Let $g$ be a generator of this group $\mathbb{G}$. In this group, given $g^x$ for a random $x \in \{1,\ldots p-1\}$ consider the problem of finding $x$. This problem, referred to as the discrete-log problem, is believed to be computationally hard.
 
 The asymptotic definition of the discrete-log problem needs to consider an infinite family of groups or what we will a group ensemble. 
 
-\paragraph{Group Ensemble.} A group ensemble is a set of finite cyclic groups $\mathcal{G} =\{ \mathbb{G}_n\}_{n \in \mathbb{N}}$. For the group $G_n$, we assume that given two group elements in $G_n$, their sum can be computed in polynomial in $n$ time. Additionally, we assume that given $n$ the generator $g$ of $\mathbb{G}_n$ can be computed in polynomial time. 
+\paragraph{Group Ensemble.} A group ensemble is a set of finite cyclic groups $\mathcal{G} =\{ \mathbb{G}_n\}_{n \in \mathbb{N}}$. For the group $G_n$, we assume that given two group elements in $G_n$, their group operation (which we denote additively or multiplicatively depending on context)    can be computed in polynomial in $n$ time. Additionally, we assume that given $n$ the generator $g$ of $\mathbb{G}_n$ can be computed in polynomial time. 
 
 \begin{definition}[Discrete-Log Assumption]\label{def:dl}
 We say that the discrete-log assumption holds for the group ensemble $\mathcal{G} =\{ \mathbb{G}_n\}_{n \in \mathbb{N}}$, if for every non-uniform PPT algorithm $\mathcal{A}$ we have that
@@ -110,6 +126,24 @@ is a negligible function.
 \end{definition}
 
 \paragraph{The Diffie-Hellman Problems.} In addition to the discrete-log assumption, we also define the Computational Diffie-Hellman Assumption and the Decisional Diffie-Hellman Assumption. 
+\begin{marginfigure}
+\begin{tikzpicture}[
+    node distance=2cm,
+    assumption/.style={rectangle, draw, fill=red!20, text width=2.5cm, text centered, rounded corners, minimum height=1cm},
+    arrow/.style={->, >=stealth, thick}
+]
+\node[assumption] (dl) {Discrete-Log (DL)};
+\node[assumption, below of=dl] (cdh) {Computational Diffie-Hellman (CDH)};
+\node[assumption, below of=cdh] (ddh) {Decisional Diffie-Hellman (DDH)};
+
+\draw[arrow] (dl) -- node[right] {implies} (cdh);
+\draw[arrow] (cdh) -- node[right] {implies} (ddh);
+\draw[arrow, bend right=60] (dl) to node[below, sloped] {implies} (ddh);
+\end{tikzpicture}
+\caption{Relationship between discrete-log assumptions. DL is the weakest assumption; breaking DL allows breaking CDH, and breaking CDH allows breaking DDH. The reverse implications are not known to hold.}
+\label{fig:assumptions}
+\end{marginfigure}
+
 
 \begin{definition}[Computational Diffie-Hellman (CDH) Assumption]\label{def:cdh}
 We say that the Computational Diffie-Hellman Assumption holds for the group ensemble $\mathcal{G} =\{ \mathbb{G}_n\}_{n \in \mathbb{N}}$, if for every non-uniform PPT algorithm $\mathcal{A}$ we have that
@@ -118,28 +152,32 @@ is a negligible function.
 \end{definition}
 
 \begin{definition}[Decisional Diffie-Hellman (DDH) Assumption]\label{def:ddh}
-We say that the Computational Diffie-Hellman Assumption holds for the group ensemble $\mathcal{G} =\{ \mathbb{G}_n\}_{n \in \mathbb{N}}$, if for every non-uniform PPT algorithm $\mathcal{A}$ we have that
+We say that the Decisional Diffie-Hellman Assumption holds for the group ensemble $\mathcal{G} =\{ \mathbb{G}_n\}_{n \in \mathbb{N}}$, if for every non-uniform PPT algorithm $\mathcal{A}$ we have that
 \[\mu_\mathcal{A}(n) = \mid\Pr_{x,y \leftarrow |G_n|}[\mathcal{A}(g,g^x,g^y,g^{xy}) = 1] - \Pr_{x,y,z \leftarrow |G_n|}[\mathcal{A}(g,g^x,g^y,g^{z}) = 1]\mid\]
 is a negligible function.
 \end{definition}
 
-It is not hard to observe that the discrete-log assumption is the weakest of the three assumptions above. In fact, it is not difficult to show that the Discrete-Log Assumption for $\mathcal{G}$ implies the CDH and the DDH Assumptions for $\mathcal{G}$.  Additionally, we leave it as an exercise to show that the CDH Assumption for $\mathcal{G}$ implies the  DDH Assumptions for $\mathcal{G}$.
+It is not hard to observe that the discrete-log assumption is the weakest of the three assumptions above. In fact, it is not difficult to show that the Discrete-Log Assumption for $\mathcal{G}$ implies the CDH and the DDH Assumptions for $\mathcal{G}$.  Additionally, we leave it as an exercise to show that the CDH Assumption for $\mathcal{G}$ implies the  DDH Assumptions for $\mathcal{G}$. Figure~\ref{fig:assumptions} illustrates the relationship between these assumptions.
 
 \paragraph{Examples of Groups where these assumptions hold.} Now we provide some examples of group where these assumptions hold. 
 \begin{enumerate}
-    \item Consider the group $\mathbb{Z}_p^*$ for a prime $p$.\footnote{Since the number of primes is infinite we can define an infinite family of such groups. For the sake of simplicity, here we only consider a single group.} For this group the CDH Assumption is conjectured to be true. However, using the Legendre symbol,\footnote{Let $p$ be an odd prime number. An integer $a$ is said to be a \emph{quadratic residue} modulo $p$ if it is congruent to a perfect square modulo $p$ and  is said to be a \emph{quadratic non-residue} modulo $p$ otherwise. The \emph{Legendre symbol} is a function of $a$ and $p$ defined as
+    \item Consider the group $\mathbb{Z}_p^*$ for a prime $p$.\footnote{Since the number of primes is infinite we can define an infinite family of such groups. For the sake of simplicity, here we only consider a single group.} For this group the CDH Assumption is conjectured to be true. 
+    
+    However, 
+    the DDH Assumption in this group can be shown to be false. Can you show how?
+    \paragraph{Legendre Symbol.} Let $p$ be an odd prime number. An integer $a$ is said to be a \emph{quadratic residue} modulo $p$ if it is congruent to a perfect square modulo $p$ and is said to be a \emph{quadratic non-residue} modulo $p$ otherwise. The \emph{Legendre symbol} is a function of $a$ and $p$ defined as
     \begin{equation*}
         \left(\frac{a}{p}\right) = \begin{cases}
-    1 &\text{if $a$ is quadration residue mod $p $ and $a \not\equiv 0 \mod p$}\\
-    -1 &\text{if $a$ is quadration non-residue mod $p $}\\
-    0 &\text{if $a \equiv 0 \mod p $}
+    1 &\text{if $a$ is quadratic residue mod $p$ and $a \not\equiv 0 \mod p$}\\
+    -1 &\text{if $a$ is quadratic non-residue mod $p$}\\
+    0 &\text{if $a \equiv 0 \mod p$}
     \end{cases}
     \end{equation*}
-    
-Legendre symbol can be efficiently computed as $\left(\frac{a}{p}\right) = a^{\frac{p-1}{2}}\mod p$.} 
-the DDH Assumption in this group can be shown to be false. Can you show how?\footnote{This is because given $g^x, g^y$ one can easily compute deduce the Legendre symbol of $g^{xy}$.  Observe that if $\left(\frac{g}{p}\right) = -1$ then we have that $\left(\frac{g^{xy}}{p}\right) = 1$ if and only if $ \left(\frac{g^x}{p}\right) =1 $ or $\left(\frac{g^y}{p}\right) = 1$. Using this fact, we can construct an adversary that breaks the DDH problem with a non-negligible (in fact, noticeable) probability.}
+    The Legendre symbol can be efficiently computed as $\left(\frac{a}{p}\right) = a^{\frac{p-1}{2}}\mod p$.
+
+    \paragraph{DDH is easy in this group.} This is because given $g^x, g^y$ one can easily compute deduce the Legendre symbol of $g^{xy}$.  Observe that if $\left(\frac{g}{p}\right) = -1$ then we have that $\left(\frac{g^{xy}}{p}\right) = 1$ if and only if $ \left(\frac{g^x}{p}\right) =1 $ or $\left(\frac{g^y}{p}\right) = 1$. Using this fact, we can construct an adversary that breaks the DDH problem with a non-negligible (in fact, noticeable) probability.
 \item Let $p = 2q+1$ where both $p$ and $q$ are prime.\footnote{By Dirichet's Theorem on primes in arithmetic progression, we have that there are infinite choices of primes $(p,q)$ for which $p = 2q+1$. This allows us to generalize this group to a group ensemble.} Next, let $\mathbb{Q}$ be the order-$q$ subgroup of quadratic residues in $\mathbb{Z}^*_p$. For this group, the DDH assumption is believed to hold. 
-\item Let $N = pq$ where $p,q, \frac{p-1}{2}$ and $\frac{q-1}{2}$ are primes. Let $\mathbb{QR}_N$ be the cyclic subgroup of qudratic resides of order $\phi(N) = (p-1)(q-1)$. For this group $\mathbb{QR}_N$, the DDH assumption is also believed to hold.
+    \item Let $N = pq$ where $p,q, \frac{p-1}{2}$ and $\frac{q-1}{2}$ are primes. Let $\mathbb{QR}_N$ be the cyclic subgroup of quadratic residues of order $\phi(N) = (p-1)(q-1)$. For this group $\mathbb{QR}_N$, the DDH assumption is also believed to hold.
 %\item Pairings:
 \end{enumerate}
 
@@ -155,13 +193,13 @@ In this section, we will show that the CDH assumption in $\mathbb{QR}_N$ implies
 Given an algorithm $\mathcal{A}$ that breaks the CDH assumption in $\mathbb{QR}_N$, we construct an non-uniform PPT adversary $\mathcal{B}$ that on input $N$ outputs its prime factors $p$ and $q$.
 \end{lemma}
 \begin{proof}
-Given that $\mathcal{A}$ is an algorithm that solves the CDH problem in $\mathbb{QR}_N$ with a non-negligible probability, we construct an algorithm $\mathcal{B}$ that can factor $N$. Specifically, $\mathcal{B}$ on input $N$ proceeds as follows:
+Given that $\mathcal{A}$ is an algorithm that solves the CDH problem in $\mathbb{QR}_N$ with a non-negligible probability, we construct an algorithm $\mathcal{B}$ that can factor $N$. The reduction works by using $\mathcal{A}$ to find square roots that help factor $N$. Specifically, $\mathcal{B}$ on input $N$ proceeds as follows:
 \begin{enumerate}
-\item Sample $v \leftarrow \mathbb{QR}_N$ (such a $v$ can be obtained by sampling a random value in $\mathbb{Z}_N^*$ and squaring it) and compute $g := v^2 \mod N$.
-\item Sample $x, y \leftarrow [N]$.\footnote{Note that sampling $x,y$ uniformly from $[N]$ is statistically close to sampling $x,y$ uniformly from $[\phi(N)]$.}
-\item Let $ u := \mathcal{A}(g, g^{x}\cdot v, g^y\cdot v)$\footnote{Note that $g^x\cdot v$ where $x \leftarrow [N]$ is statistically close to $g^x$ where $x \leftarrow [N]$.} and compute $w := \frac{u}{g^{xy}\cdot v^{x+y}}$.
+\item Sample $v \leftarrow \mathbb{QR}_N$ (such a $v$ can be obtained by sampling a random value in $\mathbb{Z}_N^*$ and squaring it) and compute $g := v^2 \mod N$. Note that $g$ is a generator of $\mathbb{QR}_N$ with high probability, since $v$ is a random quadratic residue and squaring preserves the cyclic structure.
+\item Sample $x, y \leftarrow [N]$.\footnote{Note that sampling $x,y$ uniformly from $[N]$ is statistically close to sampling $x,y$ uniformly from $[\phi(N)]$.} The statistical closeness follows from the fact that $N$ and $\phi(N) = (p-1)(q-1)$ are relatively close: $|N - \phi(N)| = p + q - 1 = O(\sqrt{N})$, so the statistical distance is $O(1/\sqrt{N})$, which is negligible.
+\item Let $ u := \mathcal{A}(g, g^{x}\cdot v, g^y\cdot v)$\footnote{Note that $g^x\cdot v$ where $x \leftarrow [N]$ is statistically close to $g^x$ where $x \leftarrow [N]$.} The inputs $g^x \cdot v$ and $g^y \cdot v$ are constructed to "hide" the actual CDH inputs while still allowing $\mathcal{A}$ to compute something useful. Then compute $w := \frac{u}{g^{xy}\cdot v^{x+y}}$.
 \item If $w^2 = v^2 \mod N$ and $u \neq \pm v$, then compute the factors of $N$ as $\mathsf{gcd}(N,u+v)$ and $N/\mathsf{gcd}(N,u+v)$. Otherwise, output $\bot$.
 \end{enumerate}
-Observe that if $\mathcal{A}$ solves the CDH problem then the returned values $u = g^{(x+ 2^{-1})(y + 2^{-1})} = v^{2xy + x+ y + 2^{-1}}$. Consequently, the computed value $w = v^{2^{-1}}$. Furthermore, with probability $\frac12$ we have that $w \neq v$. In this case, $\mathcal{B}$ can factor $N$.
+To understand why this works, observe that if $\mathcal{A}$ correctly computes the CDH value, then the returned values $u = g^{(x+ 2^{-1})(y + 2^{-1})} = v^{2xy + x+ y + 2^{-1}}$. Here, $2^{-1}$ denotes the multiplicative inverse of $2$ modulo the order of the group, which exists since the order is odd (as $\phi(N) = (p-1)(q-1)$ and both $\frac{p-1}{2}$ and $\frac{q-1}{2}$ are prime, implying $p$ and $q$ are odd). Consequently, the computed value $w = v^{2^{-1}}$. This follows from: $w = \frac{u}{g^{xy} \cdot v^{x+y}} = \frac{v^{2xy + x + y + 2^{-1}}}{v^{2xy + x + y}} = v^{2^{-1}}$. Furthermore, with probability $\frac12$ we have that $w \neq v$. This is because $w^2 = (v^{2^{-1}})^2 = v$, so $w$ is a square root of $v$. In $\mathbb{Z}_N^*$ where $N = pq$, each quadratic residue has exactly 4 square roots. Two of these are $\pm v$ (which don't help us factor), and the other two are $\pm w$ where $w \neq \pm v$. If $w^2 = v^2 \pmod{N}$ but $w \neq \pm v \pmod{N}$, then $w^2 - v^2 = (w-v)(w+v) \equiv 0 \pmod{N}$, which means $N$ divides $(w-v)(w+v)$ but neither factor individually. Since $N = pq$, this allows us to recover the factors via $\gcd(N, w+v)$ and $\gcd(N, w-v)$. In this case, $\mathcal{B}$ can factor $N$.
 \end{proof}
 
