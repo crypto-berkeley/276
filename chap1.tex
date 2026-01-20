@@ -20,7 +20,7 @@ A probabilistic Turing Machine $M$ is said to be PPT (a Probabilistic Polynomial
 A {\em non-uniform} PPT Turing Machine is a collection of machines one for each input length, as opposed to a single machine that must work for all input lengths. Non-uniformity allows each machine $M_n$ to have "advice" specific to inputs of length $n$, which can be thought of as a polynomial-sized lookup table. This models adversaries who may have precomputed information or special knowledge about specific input lengths. While non-uniform PPT is a stronger model than uniform PPT (any uniform PPT algorithm is also non-uniform PPT), it is often more convenient for security reductions and captures realistic adversarial capabilities.
 
 \begin{definition}[Non-uniform PPT]
-A non-uniform PPT machine is a sequence of Turing Machines $\{ M_1, M_2, \cdots \}$ such that $\exists c \in \mathbb{Z}^+$ such that $\forall x \in\{0,1\}^*$, $M_{|x|}(x)$ halts in $|x|^c$ steps.
+A non-uniform PPT machine is a sequence of Turing Machines $\{ M_1, M_2, \cdots \}$ such that $\exists c \in \mathbb{Z}^+$ such that $\forall x \in\{0,1\}^*$, $|M_{|x|} |$ if of size $\leq |x|^c$ and $M_{|x|}(x)$ halts in $|x|^c$ steps.
 \end{definition}
 
 
