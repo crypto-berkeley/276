@@ -5,18 +5,17 @@
 %\newcommand{\adv}{\mathcal{A}}
 \newcommand{\advb}{\mathcal{B}}
 \newcommand{\advc}{\mathcal{C}}
-
 \chapter{One-Way Functions}
 \label{sec:owf}
 
 \label{ssec:owf}
-Cryptographers often attempt to base cryptographic results on conjectured computational assumptions to leverage reduced adversarial capabilities. Furthermore, the security of these constructions is no better than the assumptions they are based on. 
+Consider password hashing: we want a function that's easy to compute (hash the password) but hard to invert (recover the password from the hash). This is exactly what one-way functions formalize. Cryptographers often attempt to base cryptographic results on conjectured computational assumptions to leverage reduced adversarial capabilities. Furthermore, the security of these constructions is no better than the assumptions they are based on. 
 \begin{quote}
 \emph{Cryptographers seldom sleep well.}\footnote{Quote by Silvio Micali in personal communication with Joe Kilian.}
 \end{quote}
-Thus, basing cryptographic tasks on the \emph{minimal} necessary assumptions is a key tenet in cryptography. Towards this goal, rather can making assumptions about specific computational problem in number theory, cryptographers often consider \emph{abstract primitives}. The existence of these abstract primitives can then be based on one or more computational problems in number theory.
+Thus, basing cryptographic tasks on the \emph{minimal} necessary assumptions is a key tenet in cryptography. Towards this goal, rather than making assumptions about specific computational problem in number theory, cryptographers often consider \emph{abstract primitives}. The existence of these abstract primitives can then be based on one or more computational problems in number theory.
 
-The weakest abstract primitive cryptographers consider is one-way functions. Virtually, every cryptographic goal of interest is known to imply the existence of one-way functions. In other words, most cryptographic tasks would be impossible if the existence of one-way functions was ruled out. On the flip side, the realizing cryptographic tasks from just one-way functions would be ideal. 
+The weakest abstract primitive cryptographers consider is one-way functions. Virtually, every cryptographic goal of interest is known to imply the existence of one-way functions. In other words, most cryptographic tasks would be impossible if the existence of one-way functions was ruled out. On the flip side, realizing cryptographic tasks from just one-way functions would be ideal. 
 
 \section{Definition}
 A one-way function $f: \{0,1\}^n \rightarrow \{0,1\}^m$ is a function that is easy to compute but hard to invert. This intuitive notion is trickier to formalize than it might appear on first thought.
@@ -35,24 +34,33 @@ A function $f : \binset{*} \rightarrow \binset{*}$ is said to be one-way functio
 \end{definition}
 
 \begin{marginfigure}[-10cm]
-\begin{tikzpicture}
-    % ellipse
-    \draw[black,fill=yellow!50] (0,0) ellipse (1cm and 2cm)
-    node at (0,0) {$\{0,1\}^n$};
-    \draw[black,fill=orange!50] (3,0) ellipse (1cm and 2cm) 
-    node at (3,0) {$\{0,1\}^m$};
-    % lines connecting ellipses
-    \draw[green!40!black!100, thick, ->] (0.5,0.75) -- (2.5,0.75) node[midway, above] {Easy to Compute};
-    \draw[red!40!black!100, thick, dashed, ->] (2.5,-0.75) -- (0.5,-0.75) node[midway, below] {Hard to Invert};
+\begin{tikzpicture}[scale=0.9]
+    % Left ellipse (domain) - yellow
+    \draw[black, fill=yellow!50, line width=1.5pt] (0,0) ellipse (1.2cm and 2.2cm);
+    \node[black, font=\small\bfseries] at (0,0) {$\{0,1\}^n$};
+    
+    % Right ellipse (range) - orange
+    \draw[black, fill=orange!50, line width=1.5pt] (4,0) ellipse (1.2cm and 2.2cm);
+    \node[black, font=\small\bfseries] at (4,0) {$\{0,1\}^m$};
+    
+    % Forward arrow (Easy to Compute) - top
+    \draw[green!50!black, line width=2.5pt, ->, >=stealth] 
+        (1.1,1.2) .. controls (1.8,1.5) and (2.2,1.5) .. (2.9,1.2);
+    \node[green!50!black, font=\tiny\bfseries, above] at (2,1.6) {Easy to Compute};
+    
+    % Backward arrow (Hard to Invert) - bottom
+    \draw[red!70!black, line width=2.5pt, ->, >=stealth, dashed, dash pattern=on 3pt off 2pt] 
+        (2.9,-1.2) .. controls (2.2,-1.5) and (1.8,-1.5) .. (1.1,-1.2);
+    \node[red!70!black, font=\tiny\bfseries, below] at (2,-1.6) {Hard to Invert};
 \end{tikzpicture}
-\caption{Visulizing One-way Funcations}
+\caption{Visualizing One-way Functions}
 \label{fig:owf}
 \end{marginfigure}
 
 
 \footnotetext{Typically, the probability is only taken over the random choices of $x$, since we can fix the random coins of the adversary $\mathcal{A}$ that maximize its advantage.}
 
-We note that the function is not necessarily one-to-one. In other words, it is possible that $f(x) = f(x')$ for $x \neq x'$ -- and the adversary is allowed to output any such $x'$.
+We note that the function is not necessarily one-to-one. In other words, it is possible that $f(x) = f(x')$ for $x \neq x'$ -- and the adversary is allowed to output any such $x'$. For instance, if $f(x) = x \bmod 2$, then $f(0) = f(2) = 0$, and the adversary succeeds if it outputs either 0 or 2.
 
 The above definition is rather delicate. We next describe problems in the slight variants of this definition that are insecure.
 
@@ -60,7 +68,7 @@ The above definition is rather delicate. We next describe problems in the slight
 \item What if we require that
     $\Pr_{x \stackrel{\$}{\leftarrow} \binset{n}}[ \mathcal{A}(1^n, f(x)) \in f^{-1}(f(x))] = 0$ instead of being negligible?
 
-This condition is false for every function $f$. An adversary $\mathcal{A}$ that outputs an arbitrarily fixed value $x_0$ succeeds with probability at least $1/2^{n}$, as $x_0 = x$ with at least the same probability.
+This condition is false for every function $f$. The point is that requiring perfect security (probability $0$) is too strong because an adversary $\mathcal{A}$ that outputs an arbitrarily fixed value $x_0$ succeeds with probability at least $1/2^{n}$, as $x_0 = x$ with at least the same probability. Even a trivial adversary that always outputs a fixed value succeeds with non-zero probability.
 
 \item  What if we drop the input $1^n$ to $\mathcal{A}$ in Equation~\ref{eq:owf}?
 
@@ -70,7 +78,7 @@ Providing the attacker with $1^n$ ($n$ repetitions of the $1$ bit) as additional
 \end{enumerate}
 
 \paragraph{Candidate One-way Functions.}
-It is not known whether one-way functions exist. In fact, the existence of one-way functions would imply that $P \neq NP$ (see Exercise~\ref{ex:PNP}). 
+It is not known whether one-way functions exist. In fact, the existence of one-way functions would imply that $P \neq NP$ (see Exercise~\ref{ex:PNP}). This connection to complexity theory highlights the fundamental nature of one-way functions: they represent the boundary between what is efficiently computable and what is not. 
 
 However, there are candidates of functions that could be one-way functions, based on the difficulty of certain computational problems. (See Section~\ref{sec:assumptions})%One example is based on the hardness of factoring. Multiplication can be done easily in $O(n^2)$ time, but so far no polynomial time algorithm is known for factoring.
 %Explicitly, we can define the function $f_1 : P_n \times P_n \rightarrow \mathbb{Z}$ where $P_n$ is the set of all $n$-bit primes as $f_1(p, q) = p \cdot q$.
@@ -83,7 +91,7 @@ However, there are candidates of functions that could be one-way functions, base
 %
 %
 %\section{OWFs from Discrete-Log}
-Let's suppose that the discrete-log assumption hold for group ensemble $\mathcal{G} = \{\mathbb{G}_n\}$ then we have that the function family $\{f_n\}$ where $f_n: \{1,\ldots |\mathbb{G}_n|\}\rightarrow \mathbb{G}_n$ is a one-way function family. In particular, $f_n(x) = g^x$ where $g$ is the generator of the group $\mathbb{G}_n$. The proof that $\{f_n\}$ is one-way based on the Discrete-Log Assumption (see Definition~\ref{def:dl}) is left as as an exercise. 
+Let's suppose that the discrete-log assumption holds for group ensemble $\mathcal{G} = \{\mathbb{G}_n\}$ then we have that the function family $\{f_n\}$ where $f_n: \{1,\ldots |\mathbb{G}_n|\}\rightarrow \mathbb{G}_n$ is a one-way function family. In particular, $f_n(x) = g^x$ where $g$ is the generator of the group $\mathbb{G}_n$. The proof that $\{f_n\}$ is one-way based on the Discrete-Log Assumption (see Definition~\ref{def:dl}) is left as an exercise. 
 
 
 \section{Robustness and Brittleness of One-way Functions}
@@ -92,7 +100,7 @@ What operations can we perform on one-way functions and still have a one-way fun
 \subsection{Robustness}
 Consider having a one-way function $f$.  Can we use this function $f$ in order to make a more structured one-way function $g$ such that $g(x_0) = y_0$ for some constants $x_0, y_0$, or would this make the function no longer be one-way? 
 
-Intuitively, the answer is yes - we can specifically set $g(x_0) = y_0$, and otherwise have $g(x) = f(x)$.  In this case, the adversary gains the knowledge of how to invert $y_0$, but that will only happen with negligible probability, and so the function is still one-way.
+Intuitively, the answer is yes, we can specifically set $g(x_0) = y_0$, and otherwise have $g(x) = f(x)$.  In this case, the adversary gains the knowledge of how to invert $y_0$, but that will only happen with negligible probability, and so the function is still one-way. More formally, if an adversary could break $g$ with non-negligible probability, we could use it to break $f$ by handling the negligible case where $x = x_0$ separately.
 
 % \begin{theorem}
 % Given a one-way function $f : \binset{n} \rightarrow \binset{m}$ and constants $x_0 \in \binset{n}$, $y_0 \in \binset{m}$, $\exists g : \binset{n} \rightarrow \binset{m}$ such that $g(x_0) = y_0$ where $g$ is a one-way function.
@@ -105,13 +113,13 @@ In fact, this can be done for an exponential number of $x_0, y_0$ pairs. To illu
 
 However, this raises an apparent contradiction - according to this theorem, given a one-way function $f$, we could keep fixing each of its values to $0$, and it would continue to be a one-way function.  If we kept doing this, we would eventually end up with a function which outputs 0 for {\em all} of the possible values of $x$.  How could this still be one-way?\\
 
-The resolution of this apparent paradox is by noticing that a one-way function is only required to be one-way in the limit where $n$ grows very large.  So, no matter how many times we fix the values of $f$ to be 0, we are still only setting a finite number of $x$ values to 0.  However, this will still satisfy the definition of a one-way function - it is just that we will have to use larger and larger values of $n_0$ in order to prove that the probability of breaking the one-way function is negligible.
+The resolution of this apparent paradox is by noticing that a one-way function is only required to be one-way in the limit where $n$ grows very large.  So, no matter how many times we fix the values of $f$ to be 0, we are still only setting a finite number of $x$ values to 0.  However, this will still satisfy the definition of a one-way function - it is just that we will have to use larger and larger values of $n_0$ in order to prove that the probability of breaking the one-way function is negligible. This illustrates why cryptographic definitions are asymptotic: they allow for 'bad' behavior on finitely many inputs as long as security holds in the limit.
 
 \subsection{Brittleness}
 \paragraph{Example: OWFs do not always compose securely.}
-Given a one-way function $f : \binfunc{n}{n}$, is the function $f^2(x) = f(f(x))$ also a one-way function?  Intuitively, it seems that if it is hard to invert $f(x)$, then it would be just as hard to invert $f(f(x))$. 
+Given a one-way function $f : \binfunc{n}{n}$, is the function $f^2(x) = f(f(x))$ also a one-way function?  Intuitively, it seems that if it is hard to invert $f(x)$, then it would be just as hard to invert $f(f(x))$.  One might try to invert $f$ by first inverting $f^2$ to get some $x'$ with $f^2(x') = f^2(x)$, then inverting $f$ on $f(x')$. But this fails because $f^2(x') = f^2(x)$ doesn't guarantee $f(x') = f(x)$ - we might have $f(x') \neq f(x)$ but $f(f(x')) = f(f(x))$.
 % \sanjam{Explain the intuitive reduction that doesn't work.}  
-However, this intuition is incorrect and highlights the delicacy when working with cryptographic assumptions and primitives. In particular, assuming one-way functions exists we describe a one-way function $f: \{0,1\}^{n}\times \{0,1\}^{n} \rightarrow \{0,1\}^{2n}$ such that $f^2$ can be efficiently inverted.
+Thus, this intuition is incorrect and highlights the delicacy when working with cryptographic assumptions and primitives. In particular, assuming one-way functions exists we describe a one-way function $f: \{0,1\}^{n}\times \{0,1\}^{n} \rightarrow \{0,1\}^{2n}$ such that $f^2$ can be efficiently inverted.
 Let $g: \{0,1\}^n \rightarrow \{0,1\}^n$ be a one-way function then we set $f$ as follows:
 $$f(x_1,x_2) = 0^{n}\|g(x_1)$$
 Two observations follow:
@@ -122,7 +130,7 @@ Two observations follow:
       \textbf{Description of $\mathcal{B}$}: $\mathcal{B}$ on input $y \in\{0,1\}^n$ outputs the $n$ lower-order bits of  $\mathcal{A}(1^{2n}, 0^{n}\|y)$.
 
       Observe that if $\mathcal{A}$ successfully inverts $f$ then we have that $\mathcal{B}$ successfully inverts $g$. More formally, we have that:
-      $$\mu_{\mathcal{B},g}(n) = \Pr_{x \stackrel{\$}{\leftarrow} \binset{n}}\left[ \mathcal{A}(1^{2n}, 0^n || g(x)) \in \{0,1\}^n || g^{-1}(g(x))\right].$$
+      $$\mu_{\mathcal{B},g}(n) = \Pr_{x \stackrel{\$}{\leftarrow} \binset{n}}\left[ \mathcal{A}(1^{2n}, 0^n || g(x)) \in \{0,1\}^n || g^{-1}(g(x))\right].$$ (Here, the set $\{0,1\}^n || g^{-1}(g(x))$ means all strings that start with any $n$-bit prefix followed by a preimage of $g(x)$ under $g$.)
       But
       \begin{align*}
       \mu_{\mathcal{A},f}(2n) =& \Pr_{x_1, x_2 \stackrel{\$}{\leftarrow} \binset{2n}}[ \mathcal{A}(1^{2n}, f(x_1, x_2)) \in f^{-1}(f(\tilde x))]\\
@@ -184,7 +192,7 @@ Two observations follow:
 % To illustrate these three steps, let us consider a concrete example. 
 
 \paragraph{Example: Dropping a bit is not always secure.}
-Below is another example of a transformation that does not work. Given any one-way function $g$, let $g'(x)$ be $g(x)$ with the first bit omitted.
+Below is another example of a transformation that does not work. One might think that dropping a single bit can't hurt security much, but we'll show that even this seemingly minor modification can completely break one-wayness. Given any one-way function $g$, let $g'(x)$ be $g(x)$ with the first bit omitted.
 
 \begin{claim}
 $g'$ is not necessarily one-way. In other words, there exists a OWF function $g$ for which $g'$ is not one-way.
@@ -259,7 +267,7 @@ Notice that $g'(0^{n} \| \overline{y}) = 0^{n-1} \| \overline{y}$. Thus, $\advc$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Hardness Amplification}
 \label{sec:owf:amplify}
-In this section, we show that even a very \emph{weak} form of one-way functions suffices from constructing one-way functions as defined previously. For this section, we refer to this previously defined notion as strong one-way functions.
+In this section, we show that even a very \emph{weak} form of one-way functions suffices for constructing one-way functions as defined previously. For this section, we refer to this previously defined notion as strong one-way functions. This is a powerful result: it shows that even if a function is only 'weakly' one-way (i.e., invertible with noticeable probability), we can amplify it to get a 'strong' one-way function (invertible with only negligible probability).
 \begin{definition}[Weak One-Way Functions]
 A function $f : \binset{n} \rightarrow \binset{m}$ is said to be a weak one-way function if:
 \begin{itemize}
@@ -278,12 +286,12 @@ If there exists a weak one-way function, then there exists a (strong) one-way fu
 
 \proof We prove the above theorem constructively. Suppose $f : \binset{n} \rightarrow \binset{m}$ is a weak one-way function, then we prove that the function $g: \binset{nq} \rightarrow \binset{mq}$ for $q = \lceil \frac{2n}{\alpha_{f}(n)} \rceil$ where 
 $$g(x_1, x_2, \cdots, x_q) = f(x_1) || f(x_2) || \cdots || f(x_q),$$
- is a strong one-way function. Let us discuss the intuition. A weak one-way function is "strong" in a small part of its domain. For this construction to result in a strong one-way function, we need just one of the $q$ instantiations to be in the part of the domain where our weak one-way function is strong. If we pick a large enough $q$, this is guaranteed to happen.
+ is a strong one-way function. Let us discuss the intuition. A weak one-way function is "strong" in a small part of its domain. For this construction to result in a strong one-way function, we need just one of the $q$ instantiations to be in the part of the domain where our weak one-way function is strong. If we pick a large enough $q$, this is guaranteed to happen. More concretely, if the weak OWF is hard to invert on at least an $\alpha_f(n)$ fraction of inputs, then with $q$ independent copies, the probability that ALL are easy to invert is at most $(1-\alpha_f(n))^q$, which becomes negligible for large enough $q$.
 
 Assume for the sake of contradiction that there exists an adversary $\mathcal{B}$ such that $\mu_{\mathcal{B},g}(nq) = \Pr_{x \stackrel{\$}{\leftarrow} \binset{nq}}[ \mathcal{B}(1^{nq}, g(x)) \in g^{-1}(g(x))]$ is non-negligible.
 %Suppose $\mu_{\mathcal{A},g}(nq) \geq \tilde \mu_{\mathcal{A},g}(nq)$ for arbitrarily large $n$, where $\tilde  \mu_{\mathcal{A},g}$ is a noticeable function.\peihan{to ensure that $T$ is poly}
 Then we use $\mathcal{B}$ to construct $\mathcal{A}$ (see Figure~\ref{fig:adv:weak}) that breaks $f$, namely $\mu_{\mathcal{A},f}(n) = \Pr_{x \stackrel{\$}{\leftarrow} \binset{n}}[ \mathcal{A}(1^n, f(x)) \in f^{-1}(f(x))] > 1 - \alpha_f(n)$ for sufficiently large $n$.
-\begin{marginfigure}[-5cm]
+\begin{marginfigure}[0cm]
 %\Loop { $T=\frac{4n^2}{\alpha_f(n) \mu_{\mathcal{B}, g}(nq)}$ times}
 \begin{enumerate}
     \item $i \stackrel{\$}{\leftarrow} [q]$.
@@ -296,10 +304,10 @@ Then we use $\mathcal{B}$ to construct $\mathcal{A}$ (see Figure~\ref{fig:adv:we
 \label{fig:adv:weak}
 \end{marginfigure}
 
-Note that: (1) $\mathcal{A}(1^n, y)$ iterates at most $T = \frac{4n^2}{\alpha_f(n)\mu_{\mathcal{B},g}(nq)}$ times each call is polynomial time. (2) $\mu_{\mathcal{B},g}(nq)$ is a non-negligible function. This implies that for infinite choices of $n$ this value is greater than some noticeable function. Together these two facts imply that for infinite choices of $n$ the running time of $\mathcal{A}$ is bounded by a polynomial function in $n$.
+Note that: (1) $\mathcal{A}(1^n, y)$ iterates at most $T = \frac{4n^2}{\alpha_f(n)\mu_{\mathcal{B},g}(nq)}$ times and each iteration runs in polynomial time. (2) $\mu_{\mathcal{B},g}(nq)$ is a non-negligible function. Since $\mu_{\mathcal{B},g}$ is non-negligible, there exists a noticeable function $\delta$ such that $\mu_{\mathcal{B},g}(nq) \geq \delta(nq)$ for infinitely many $n$. For such $n$, $T$ is polynomial. This implies that for infinite choices of $n$ the running time of $\mathcal{A}$ is bounded by a polynomial function in $n$.
 
-It remains to show that $\Pr_{x \stackrel{\$}{\leftarrow} \binset{n}}[ \mathcal{A}(1^n, f(x)) = \bot] < \alpha_f(n)$ for arbitrarily large $n$. A natural way to argue this is by showing that at least one execution of $\mathcal{B}$ should suffice for inverting $f(x)$. However, the technical challenge in proving this formally is that these calls to $\mathcal{B}$ aren't independent. Below we formalize this argument even when these calls aren't independent.\marginnote[-5cm]{\begin{lemma}
-Let $A$ be any an efficient algorithm such that $\Pr_{x,r}[A(x,r) =1] \geq \epsilon$. Additionally, let $G = \{x\mid \geq \Pr_{r}[A(x,r) =1] \geq \frac\epsilon2\}$. Then, we have $\Pr_x[x \in G] \geq \frac\epsilon2$.
+It remains to show that $\Pr_{x \stackrel{\$}{\leftarrow} \binset{n}}[ \mathcal{A}(1^n, f(x)) = \bot] < \alpha_f(n)$ for arbitrarily large $n$. A natural way to argue this is by showing that at least one execution of $\mathcal{B}$ should suffice for inverting $f(x)$. However, the technical challenge in proving this formally is that these calls to $\mathcal{B}$ aren't independent. The calls share the same $x$ value, so if $\mathcal{B}$ fails on one call, it might be more likely to fail on others. We need to carefully analyze the dependency structure. Below we formalize this argument even when these calls aren't independent.\marginnote[-3cm]{\begin{lemma}
+Let $A$ be any an efficient algorithm such that $\Pr_{x,r}[A(x,r) =1] \geq \epsilon$. Additionally, let $G = \{x\mid \Pr_{r}[A(x,r) =1] \geq \frac\epsilon2\}$. Then, we have $\Pr_x[x \in G] \geq \frac\epsilon2$.
 \end{lemma}
 \begin{proof}
 The proof of this lemma follows by a very simple counting argument. Let's start by assuming that $\Pr_x[x \in G] < \frac\epsilon2$. Next, observe that
@@ -313,10 +321,10 @@ which is a contradiction.
 }
 
 Define the set $S$ of ``bad'' $x$'s, which are hard to invert:
-$$S := \left\{x \left| \Pr_\mathcal{B}\left[\mathcal{A} \text{ inverts $f(x)$ in a single iteration} \right] \leq \frac{\alpha_f(n) \mu_{\mathcal{B},g}(nq)}{4n} \right. \right\}.$$
+$$S := \left\{x \left| \Pr_\mathcal{B}\left[\mathcal{A} \text{ inverts $f(x)$ in a single iteration} \right] \leq \frac{\alpha_f(n) \mu_{\mathcal{B},g}(nq)}{4n} \right. \right\}.$$ (Here, $\Pr_\mathcal{B}$ denotes the probability over the randomness of $\mathcal{B}$, which includes the random choice of $i$ and the random $x_j$ values.)
 We start by proving that the size of $S$ is small. More formally,
 $$\Pr_{x \stackrel{\$}{\leftarrow} \binset{n}} [x \in S] \leq \frac{\alpha_f(n)}{2}.$$
-Assume, for the sake of contradiction,\marginnote{\begin{lemma}
+Assume, for the sake of contradiction,\marginnote[-8cm]{\begin{lemma}
 Let $A$ be any an efficient algorithm such that $\Pr_{x,r}[A(x_1,\ldots x_n,r) =1] \geq \epsilon$. Additionally, let $G = \{x\mid \geq \Pr_{x_1,\ldots x_n,r}[A(x,r) =1\mid \exists i, x = x_i] \geq \frac\epsilon2\}$. Then, we have $\Pr_x[x \in G] \geq \frac\epsilon2$.
 \end{lemma}
 \begin{proof}
@@ -361,7 +369,7 @@ for sufficiently large $n$. This concludes the proof.
 \section{Levin's One-Way Function}
 \label{sec:levin-owf}
 In this section, we discuss Levin's one-way function, which is an explicit construction of a one-way function that is secure as long as a one-way function exists.
-This is interesting because unlike a typical cryptographic primitive that relies on a specific hardness assumption (which may or may not hold in the future), Levin's one-way function is future-proof in the sense that it will be secure as long as atleast one hardness assumption holds (which we may or may not discover).
+This is interesting because unlike a typical cryptographic primitive that relies on a specific hardness assumption (which may or may not hold in the future), Levin's one-way function is future-proof in the sense that it will be secure as long as at least one hardness assumption holds (which we may or may not discover). This is a remarkable result: it shows that if OWFs exist at all, we can construct one explicitly without knowing which specific assumption to rely on.
 
 The high-level intuition behind Levin's construction is as follows: since we assume one-way functions exist, there exists a uniform machine $\tilde M$ such that $|\tilde M|$ is a constant and $\tilde M(x)$ is hard to invert for a random input $x$.
 Now, consider a function $h$ that parses the first $\log(n)$ bits of its $n$-bit input as the code of a machine $M$ and the remaining bits as the input to $M$.
@@ -433,8 +441,8 @@ Observe that for sufficiently large $n$ it holds that
 Hence $\mu_{\mathcal{B},\tilde M}(n-\log n) \geq \frac{n-1}{n}$  for sufficiently large $n$ which is a contradiction.
 \qed
 
-\section{Hardness Concentrate Bit}
-We start by asking the following question: Is it possible to concentrate the strength of a one-way function into one bit? In particular, given a one-way function $f$, does there exist one bit that can be computed efficiently from the input $x$, but is hard to compute given $f(x)$?
+\section{Hardness Concentrated Bit}
+We start by asking the following question: Is it possible to concentrate the strength of a one-way function into one bit? In particular, given a one-way function $f$, does there exist one bit that can be computed efficiently from the input $x$, but is hard to compute given $f(x)$? This question is important because hard bits are useful for constructing pseudorandom generators and other cryptographic primitives. The answer is subtle: not every OWF has a hard bit, but we can always construct one that does.
 \begin{definition}[Hard Concentrate Bit]
 Let $f:\binset{n} \rightarrow \binset{n}$ be a one-way function.
 $B:\{0,1\}^n \rightarrow \{0,1\}$ is a hard concentrate bit of $f$ if:
@@ -447,7 +455,7 @@ $B:\{0,1\}^n \rightarrow \{0,1\}$ is a hard concentrate bit of $f$ if:
 
 \noindent\textbf{A simple example.}
 Let $f$ be a one-way function. Consider the one-way function $g(b, x) = 0 || f(x)$ and a hard concentrate bit $B(b, x) = b$.
-Intuitively, the value $g(b, x)$ does not reveal any information about the first bit $b$, thus no information about the value $B(b, x)$ can be ascertained. Hence $\mathcal{A}$ cannot predict the first bit with a non-negligible advantage than a random guess. However, we are more interested in the case where the hard concentrate bit is hidden because of computational hardness and not information theoretic hardness.
+Intuitively, the value $g(b, x)$ does not reveal any information about the first bit $b$, thus no information about the value $B(b, x)$ can be ascertained. Hence $\mathcal{A}$ cannot predict the first bit with a non-negligible advantage than a random guess. However, we are more interested in the case where the hard concentrate bit is hidden because of computational hardness and not information theoretic hardness. Information-theoretic security means the adversary literally has no information, while computational security means the adversary could theoretically compute it but it's computationally infeasible. The Goldreich-Levin theorem shows we can achieve computational hardness.
 
 \bigskip
 \begin{remark}
@@ -519,7 +527,7 @@ and finally (3) the general case where $\Pr_{x,r}[E] \geq \frac12 + \epsilon(n)$
 \noindent\textbf{\underline{Super simple case.}}
 Suppose $\ma$ guesses $B(\cdot)$ with perfect accuracy:
 $$\Pr_{x,r}[E] =1.$$
-We now construct $\mathcal{B}$ that inverts $g$ with perfect accuracy.
+We now construct $\mathcal{B}$ that inverts $g$ with perfect accuracy. While unrealistic, this case illustrates the key technique: using the hard bit to extract individual bits of $x$.
 Let $e^i$ denote the one-hot $n$-bit string $0\cdots 0 1 0 \cdots0$, where only the $i$-th bit is $1$, the rest are all $0$.
 $\mathcal{B}$ gets $f(x)||r$ as input, and its algorithm is described in Figure~\ref{alg:super-simple-case}.
 
@@ -540,13 +548,6 @@ Hence $\Pr_{x,r}[\mathcal{B}(1^{2n}, g(x,r)) = (x,r)] = 1$.
 \bigskip
 \noindent\textbf{\underline{Simple case.}}
 Next moving on to the following more demanding case.
-$$\Pr_{x,r}[E] \geq \frac{3}{4} + \epsilon(n),$$ where $\epsilon(\cdot)$ is non-negligible.
-We describe $\mathcal{B}$'s algorithm for inverting $g$ in Figure~\ref{alg:simple-case}.
-Here we can no longer use the super simple case algorithm because we no longer know if $\ma$ outputs the correct bit on input $f(x) \| e^i$.
-Instead, we introduce randomness to $\ma$'s input expecting that it should be able to guess the right bit on majority of those inputs since it has a high probability of guessing $B(\cdot)$ in general.
-We now also need to make two calls to $\ma$ to isolate the $i$-th bit of $x$.
-% On input $f(x)||r$, $\mathcal{B}$ proceeds as follows:
-Note that an iteration of $\mathcal{B}$ outputs the right bit if calls to $\ma$ output the correct bit because $B(x,s) \oplus B(x, s\oplus e^i) = x_i$:
 \begin{marginfigure}
 \begin{algorithmic}
 \For {$i = 1$ \textbf{to} $n$}
@@ -564,6 +565,14 @@ Note that an iteration of $\mathcal{B}$ outputs the right bit if calls to $\ma$ 
 \end{algorithmic}
 \caption{Simple Case $\mathcal{B}$} \label{alg:simple-case}
 \end{marginfigure}
+$$\Pr_{x,r}[E] \geq \frac{3}{4} + \epsilon(n),$$ where $\epsilon(\cdot)$ is non-negligible. The threshold of $3/4$ is chosen so that with two calls, we can use a union bound. With probability $\geq 3/4 + \epsilon$ of being correct, the probability that both calls are wrong is $\leq (1/4 - \epsilon)^2$, which is small enough for Chebyshev's inequality to work.
+We describe $\mathcal{B}$'s algorithm for inverting $g$ in Figure~\ref{alg:simple-case}.
+Here we can no longer use the super simple case algorithm because we no longer know if $\ma$ outputs the correct bit on input $f(x) \| e^i$.
+Instead, we introduce randomness to $\ma$'s input expecting that it should be able to guess the right bit on majority of those inputs since it has a high probability of guessing $B(\cdot)$ in general.
+We now also need to make two calls to $\ma$ to isolate the $i$-th bit of $x$.
+% On input $f(x)||r$, $\mathcal{B}$ proceeds as follows:
+Note that an iteration of $\mathcal{B}$ outputs the right bit if calls to $\ma$ output the correct bit because $B(x,s) \oplus B(x, s\oplus e^i) = x_i$:
+
 \begin{align*}
 B(x,s) \oplus B(x, s\oplus e^i) =& \sum_j x_j s_j \oplus \sum_j x_j (s_j \oplus e^i_j)\\
 =& \sum_{j \not= i} (x_j s_j \oplus x_j s_j) \oplus x_i s_i \oplus x_i (s_i \oplus 1)\\
@@ -621,31 +630,32 @@ Then, completing the argument, we have
 The key technical challenge in this case is that we cannot make two related calls to $\ma$ as was done in the simple case above since we can't argue that both calls to $\ma$ will be correct with high enough probability.
 However, just using one call to $\ma$ seems insufficient.
 The key idea is to just guess one of those values.
-Very surprisingly, this idea along with careful analysis magically works out.
-Just like the previous two cases, we start by describing the algorithm $\mathcal{B}$ in Figure~\ref{alg:real-case}.
 
 
 \begin{marginfigure}
-\begin{algorithmic}
-\State $T = \frac{2n}{\epsilon(n)^2}$
-	\For {$\ell = 1$ \textbf{to} $\log T$}
-		\State $s_\ell \stackrel{\$}{\leftarrow} \binset{n}$
-		\State $b_\ell \stackrel{\$}{\leftarrow} \{0,1\}$
-	\EndFor
-\For {$i = 1$ \textbf{to} $n$}
-	\ForAll {$L \subseteq \{1,2,\cdots, \log T\}$}
-		\State $S_L :=\bigoplus_{j \in L} s_j$
-		\State $B_L := \bigoplus_{j \in L} b_j$
-		\State $x_i^L \leftarrow B_L \oplus \ma(f(x) || S_L\oplus e^i)$
-	\EndFor
-	\State $x'_i \gets $ majority of $\{x_i^\emptyset, \cdots, x_i^{[\log T]}\}$
-\EndFor
-\State \Return $x'_1\cdots x'_n||R$
-\end{algorithmic}
-\caption{Real Case $\mathcal{B}$} \label{alg:real-case}
-\end{marginfigure}
+    \begin{algorithmic}
+    \State $T = \frac{2n}{\epsilon(n)^2}$
+        \For {$\ell = 1$ \textbf{to} $\log T$}
+            \State $s_\ell \stackrel{\$}{\leftarrow} \binset{n}$
+            \State $b_\ell \stackrel{\$}{\leftarrow} \{0,1\}$
+        \EndFor
+    \For {$i = 1$ \textbf{to} $n$}
+        \ForAll {$L \subseteq \{1,2,\cdots, \log T\}$}
+            \State $S_L :=\bigoplus_{j \in L} s_j$
+            \State $B_L := \bigoplus_{j \in L} b_j$
+            \State $x_i^L \leftarrow B_L \oplus \ma(f(x) || S_L\oplus e^i)$
+        \EndFor
+        \State $x'_i \gets $ majority of $\{x_i^\emptyset, \cdots, x_i^{[\log T]}\}$
+    \EndFor
+    \State \Return $x'_1\cdots x'_n||R$
+    \end{algorithmic}
+    \caption{Real Case $\mathcal{B}$} \label{alg:real-case}
+    \end{marginfigure}
+Very surprisingly, this idea along with careful analysis magically works out. The "magic" here is the use of pairwise independence: by guessing $\log T$ values and using XOR combinations, we get $T$ pairwise independent samples. This is a beautiful technique that appears in many cryptographic proofs.
+Just like the previous two cases, we start by describing the algorithm $\mathcal{B}$ in Figure~\ref{alg:real-case}.
 
-\medskip
+
+
 In the beginning of the algorithm, $\mathcal{B}$ samples $\log T$ random strings $\{ s_\ell \}_{\ell}$ and bits $\{ b_\ell \}_{\ell}$.
 Since there are only $\log T$ values, with probability $\frac{1}{T}$ (which is polynomial in $n$) all the $b_{\ell}$'s are correct, i.e., $b_\ell = B(x, s_\ell)$. In the rest of this proof, we denote this event as $F$.
 Now note that if $F$ happens, then $B_L$ as defined in the algorithm is also equal to $B(x, S_L)$ (we denote the $k^{\text{th}}$-bit of $s$ with $(s)_k$): 
@@ -670,7 +680,7 @@ and with an identical argument we obtain that:
 $$\Pr_{x \stackrel{\$}{\leftarrow} \binset{n}}[x \in G] \geq \frac{\epsilon(n)}{2}$$
 
 
-\marginnote[-2cm]{%
+\marginnote[-14cm]{%
 \noindent\textbf{Pairwise Independence and Chebyshev's Inequality.} For the sake of completeness, we prove the Chebyshev's Inequality here.
 \begin{definition}[Pairwise Independence]
 A collection of random variables $\{X_1,\cdots,X_m\}$ is said to be \emph{pairwise independent} if for every pair of random variables $(X_i, X_j), i \neq j$  and every pair of values $(v_i,v_j)$, it holds that
