@@ -28,7 +28,7 @@ This meta-scheme implies a couple of requirements.
 First of all, we want Bob to indeed be able to recover $m$ when decrypting $c$ with $k$.
 It is no use having a communication scheme where the message received is not the one sent. We will call this requirement \textit{correctness}.
 The second requirement, which we have already mentioned, is \textit{confidentiality}.
-To reiterate, \textit{confidentiality} means that no eavesdropper that manages to get a hold of $c$ should be able to learn anything about $c$ that they do not already know (assuming they have no knowledge of the key $k$).
+To reiterate, \textit{confidentiality} means that no eavesdropper that manages to get a hold of $c$ should be able to learn anything about $m$ that they do not already know (assuming they have no knowledge of the key $k$).
 In addition to these two fundamental requirements, we might also impose that our private-key encryption scheme guarantees \textit{integrity} and \textit{authenticity}.
 By \textit{integrity}, we mean that Bob should be able to detect that the message $c$ has been tampered with prior to him receiving it.
 By \textit{authenticity}, we mean that Bob should be able to verify that the message he received was indeed sent by Alice, and not some adversary interfering with the conversation.
@@ -76,13 +76,13 @@ Our first definition of confidentiality is called IND Security, stated below:
 
 \begin{definition}[IND Security]
     $\forall m_0, \forall m_1$ s.t. $|m_0| = |m_1|= l(n)$ and $\forall$ nu-PPT $\ma$ we have
-    $$|\Pr[\ma(1^n, \enc(k, m_0)) = 1 \; | \; k \leftarrow \gen(1^n)] - |\Pr[\ma(1^n, \enc(k, m_1)) = 1 \; | \; k \leftarrow \gen(1^n)]| = neg(n)$$ 
+    $$|\Pr[\ma(1^n, \enc(k, m_0)) = 1 \; | \; k \leftarrow \gen(1^n)] - \Pr[\ma(1^n, \enc(k, m_1)) = 1 \; | \; k \leftarrow \gen(1^n)]| = neg(n)$$
 \end{definition}
 Note that this is not a particularly good definition of security, in the sense that the attacker is very limited in what they are allowed to do.
 Specifically, all that $\ma$ can do is take a look at the encryption of $m_0$ and $m_1$ and must decide which one is the plaintext.
 We need a more usable and realistic definition of security.
 For this reason, we will allow the attacker to have oracle access to the encryption function, $\enc(k, \cdot)$.
-In other words, $\ma$ will be able to craft their own ciphertexts, which it can then use to break the security of the encryption scheme.
+In other words, $\ma$ will be able to craft their own ciphertexts, which can then use to break the security of the encryption scheme.
 We shall dub this new definition of security \textit{Chosen Plaintext Attack Security}, or \textit{CPA Security} for short.
 
 %Informally, this means that the ciphertext $c$ should hide everything about $m$ that Eve doesn't already know.
@@ -119,7 +119,7 @@ To further illustrate this point, consider the following scheme, which is secure
         \item $x \getsr \{0, 1\}^n$
         \item $k' = (k, x)$
     \end{enumerate}
-    \item $\enc'(k', m)L:$
+    \item $\enc'(k', m):$
     \begin{enumerate}
         \item if $m = x$, then output $x$
         \item else, output $\enc(k,m)||x$
@@ -272,7 +272,7 @@ If we have a deterministic encryption scheme, then when we get $c^*$, we can aga
 
 
 \subsection{Counter Mode Encryption}
-One construction of a CCA-secure cipher is by the use of the counter mode.
+One construction of a CPA-secure cipher is by the use of the counter mode.
 
 \begin{itemize}
     \item $\enc(k, (m_1,...,m_\ell)):$
@@ -315,7 +315,7 @@ When sending a message, Alice sends the pair $(m, t)$.
 Once Bob receives the message, he runs $\Verify(k, m, t)$.
 He accepts the message if $\Verify(k, m, t) = 1$, otherwise he rejects the message.
 The formal definition is stated below:
-\begin{definition}[Private-Key Encryption Scheme]
+\begin{definition}[Message Authentication Code Scheme]
     A MAC scheme $\Pi$ is a tuple of algorithms $\Pi = (\gen, \mac, \Verify)$, with the following syntax:
     \begin{enumerate}
         \item $k \leftarrow \gen(1^n)$
@@ -632,7 +632,7 @@ Next, we'll construct an authenticated encryption scheme, called ``Encrypt-then-
             \State \Return $(c, t)$
         \EndFunction
         \Statex
-        \Function{Dec}{$(k_e, k_m), (c, t), m$}
+        \Function{Dec}{$(k_e, k_m), (c, t)$}
             \If {$\mathsf{Verify}_m(k_m, c, t)$}
                 \State \Return $\mathsf{Dec}_e(k_e, c)$
             \Else
