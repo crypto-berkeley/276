@@ -124,7 +124,7 @@ Let $g: \{0,1\}^n \rightarrow \{0,1\}^n$ be a one-way function then we set $f$ a
 $$f(x_1,x_2) = 0^{n}\|g(x_1)$$
 Two observations follow:
 \begin{enumerate} 
-  \item $f^2$ is not one-way. This follows from the fact that for all inputs $x_1, x_2$ we have that $f^2(x_1,x_2) = 0^{2n}$. This function is clearly not one-way!
+  \item $f^2$ is not one-way. This follows from the fact that for all inputs $x_1, x_2$ we have that $f^2(x_1,x_2) = 0^n || g(0^n)$. This function is clearly not one-way!
   \item $f$ is one-way. This can be argued as follows. Assume that there exists an adversary $\mathcal{A}$ such that $\mu_{\mathcal{A},f}(n) = \Pr_{x \stackrel{\$}{\leftarrow} \binset{n}}[ \mathcal{A}(1^{2n}, f(x)) \in f^{-1}(f(x))]$ is non-negligible. Using such an $\mathcal{A}$ we will describe a construction of adversary $\mathcal{B}$ such that $\allowbreak\mu_{\mathcal{B},g}(n) = \Pr_{x \stackrel{\$}{\leftarrow} \binset{n}}[ \mathcal{B}(1^n, g(x)) \in g^{-1}(g(x))]$ is also non-negligible. This would be a contradiction thus proving our claim.
 
       \textbf{Description of $\mathcal{B}$}: $\mathcal{B}$ on input $y \in\{0,1\}^n$ outputs the $n$ lower-order bits of  $\mathcal{A}(1^{2n}, 0^{n}\|y)$.
@@ -207,7 +207,7 @@ Let us assume that there exists a one-way function $h : \bin^n \rightarrow \bin^
 $$
 g(x\|y) = \begin{cases}
  0^{n}\|y &\text{    if } x = 0^n\\
-1\|0^{n-1}\|g(y) &\text{    otherwise }
+1\|0^{n-1}\|h(y) &\text{    otherwise }
 \end{cases}
 $$
 

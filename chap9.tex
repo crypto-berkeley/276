@@ -243,7 +243,7 @@ Below we state these details explicitly:
 This protocol is highly efficient and considers a very simple setting: $n=3$ parties, corruption bound $t=1$, unbounded and semi-honest adversary, statistical security, unfairness, and secure P2P channels.
 
 \noindent\textbf{(2,3)-secret sharing scheme:}
-A $(n,t)$-sharing splits a secret such that any $t$ shares are enough to reconstruct the secret, and any set of less than $t$ shares do not reveal anything about the secret.
+A $(t,n)$-sharing splits a secret such that any $t$ shares are enough to reconstruct the secret, and any set of less than $t$ shares do not reveal anything about the secret.
 Let $k \in \mathbb{Z}_p$ be a secret. A $(3,3)$-sharing is easy to construct: sample $k_1, k_2$ uniformly at random from $\mathbb{Z}_p$ and set $k_3 = k - k_1 - k_2 \mod p$.
 Given $(3,3)$-shares, we can construct a $(2,3)$-sharing by considering a replicated secret sharing scheme: each party $P_i$ gets shares $k_i, k_{i+1 \mod 3}$. It is easy to see that the shares held by any two parties are sufficient to reconstruct the secret.
 
@@ -299,7 +299,7 @@ A system implementing 1-out-of-2 oblivious transfer can be used to implement Rab
 \end{lemma}
 
 \proof
-The sender has a bit $s$. She randomly samples a bit $b \in \{0,1\}$ and $r \in \{0,1\}$, and the receiver randomly samples a bit $c \in \{0,1\}$. If $b = 0$, the sender defines $s_0 = s$ and $s_1 = r$, and otherwise, if $b = 1$, she defines $s_0 = r$ and $s_1 = s$. She then places the pair $(s_0, s_1)$ into the 1-out-of-2 oblivious transfer box. The receiver places his bit $c$ into the same box, and then the box reveals $s_c$ to him and $\perp$ to the sender. Notice that if $b = c$, then $s_c = s$, and otherwise $s_c = r$. Once $\perp$ is revealed to the sender, she sends $b$ to the receiver. The recieiver checks whether or not $b = c$. If $b = c$, then he knows that the bit revealed to him was $s$. Otherwise, he knows that the bit revealed to him was the nonsense bit $r$ and he regards it as $\perp$. \\
+The sender has a bit $s$. She randomly samples a bit $b \in \{0,1\}$ and $r \in \{0,1\}$, and the receiver randomly samples a bit $c \in \{0,1\}$. If $b = 0$, the sender defines $s_0 = s$ and $s_1 = r$, and otherwise, if $b = 1$, she defines $s_0 = r$ and $s_1 = s$. She then places the pair $(s_0, s_1)$ into the 1-out-of-2 oblivious transfer box. The receiver places his bit $c$ into the same box, and then the box reveals $s_c$ to him and $\perp$ to the sender. Notice that if $b = c$, then $s_c = s$, and otherwise $s_c = r$. Once $\perp$ is revealed to the sender, she sends $b$ to the receiver. The receiver checks whether or not $b = c$. If $b = c$, then he knows that the bit revealed to him was $s$. Otherwise, he knows that the bit revealed to him was the nonsense bit $r$ and he regards it as $\perp$. \\
 
 It is easy to see that this procedure satisfies the security requirements of Rabin's oblivious transfer protocol. Indeed, as we saw above, $s_c = s$ if and only if $b = c$, and since the sender knows $b$, we see that knowledge of whether or not the bit $s_c$ received by the receiver is equal to $s$ is equivalent to knowledge of $c$, and the security requirements of 1-out-of-2 oblivious transfer prevent the sender from knowing $c$. Also, if the receiver receives $r$ (or, equivalently, $\perp$), then knowledge of $s$ is knowledge of the bit that was not revealed to him by the box, which is again prevented by the security requirements of 1-out-of-2 oblivious transfer.  $\qed$
 
@@ -310,7 +310,7 @@ A system implementing Rabin's oblivious transfer can be used to implement 1-out-
 \proofsketch
 The sender has two bits $s_0, s_1 \in \{0,1\}$ and the receiver has a single bit $c$. The sender randomly samples $3n$ random bits $x_1, \dotsc, x_{3n} \in \{0,1\}$. Each bit is placed into its own a Rabin oblivious transfer box. The $i$th box then reveals either $x_i$ or else $\perp$ to the receiver. Let 
 \[ S := \{i \in \{1, \dotsc, 3n\} : \text{the receiver knows } x_i\}. \]
-The receiver picks two sets $I_0, I_1 \subseteq \{1, \dotsc, 3n\}$ such that $\# I_0 = \# I_1 = n$, $I_c \subseteq S$ and $I_{1-c} \subseteq \{1, \dotsc, 3n\} \setminus S$. This is possible except with probability negligible in $n$. He then sends the pair $(I_0, I_1)$ to the sender. The sender then computes $t_j= \left(\bigoplus_{i \in I_j}x_i \right) \oplus s_j$ for both $j \in \{0,1\}$ and sends $(t_0, t_1)$ to the receiver. \\
+The receiver picks two sets $I_0, I_1 \subseteq \{1, \dotsc, 3n\}$ such that $ |I_0| = |I_1| = n$, $I_c \subseteq S$ and $I_{1-c} \subseteq \{1, \dotsc, 3n\} \setminus S$. This is possible except with probability negligible in $n$. He then sends the pair $(I_0, I_1)$ to the sender. The sender then computes $t_j= \left(\bigoplus_{i \in I_j}x_i \right) \oplus s_j$ for both $j \in \{0,1\}$ and sends $(t_0, t_1)$ to the receiver. \\
 
 Notice that the receiver can uncover $s_c$ from $t_c$ since he knows $x_i$ for all $i \in I_c$, but cannot uncover $s_{1-c}$. One can show that the security requirement of Rabin's oblivious transfer implies that this system satisfies the security requirement necessary for 1-out-of-2 oblivious transfer. $\qed$ \\
 
@@ -336,7 +336,7 @@ From the receiver side, guessing $s_{1-c}$ correctly is equivalent to guessing t
   We describe how to implement a 1-out-of-4 OT using 1-out-of-2 OT:\@
   \begin{enumerate}
     \item
-      The sender, $\PartyA$ samples 5 random values $S_i \gets \bits, i \in \set{1,\dotsc, 5}$.
+      The sender, $\PartyA$ samples 6 random values $S_i \gets \bits, i \in \set{0,\dotsc, 5}$.
     \item
       $\PartyA$ computes
       \begin{align*}
@@ -348,7 +348,7 @@ From the receiver side, guessing $s_{1-c}$ correctly is equivalent to guessing t
       It sends these values to $\PartyB$.
     \item
       The parties engage in 3 1-out-of-2 Oblivious Transfer protocols for the following
-      messages: $(S_0, S_1)$, $(S_2, S_3)$, $(S_4, S_5)$. THe receiver's input for
+      messages: $(S_0, S_1)$, $(S_2, S_3)$, $(S_4, S_5)$. The receiver's input for
       the first OT is the first choice bit, and for the second and third ones is
       the second choice bit.
     \item
@@ -558,7 +558,6 @@ For each gate, Alice sends Bob a random permutation of the set of four encrypted
 \[
 \{e_g^{C_1, C_2} \} \quad \forall g \in G \quad C_1, C_2 \in \{0,1\}.
 \]
-For each gate, Alice sends Bob a random permutation of the set of four encrypted output values
 
 \paragraph{Evaluation}
 With an encrypted gate $g$,
@@ -660,7 +659,7 @@ Furthermore, during the first commitment phase, we want to make sure that the co
 
 \subsection{Zero-knowledge proof of knowledge (ZK-PoK)}
 
-\begin{definition}[ZK-PoK] Zero-knowlwedge proof of knowledge (ZK-PoK) is a zero-knowledge proof system $(P,V)$ with the property proof of knowledge with knowledge error $\kappa$:
+\begin{definition}[ZK-PoK] Zero-knowledge proof of knowledge (ZK-PoK) is a zero-knowledge proof system $(P,V)$ with the property proof of knowledge with knowledge error $\kappa$:
 
 $\exists$ a PPT $E$ (knowledge extractor) such that $\forall x \in L$ and $\forall P^{*}$ (possibly unbounded), it holds that if $\Pr[Out_V(P^{*}(x,w) \leftrightarrow V(x))]> \kappa(x)$, then 
 \[ \Pr[E^{P^*}(x) \in R(x)] \geq \Pr[Out_V(P^{*} \leftrightarrow V(x))] = 1]- \kappa(x).\]

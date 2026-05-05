@@ -171,7 +171,7 @@ Then $\pcnotionstyle{Priv\pcmathhyphen{}}\indcca_{\Pi}^{\adv}(\secpar)$ is defin
 
 \begin{definition}[CCA Security]
     A private-key encryption scheme $\Pi = (\gen,\enc,\dec)$ is CCA-secure if $\forall$ nu-PPT $\ma$
-    $$\advantage{\indcca}{\Pi,\adv} = \Big| \Pr[\pcnotionstyle{Pri\pcmathhyphen{}}\indcca_\Pi^\adv(\secpar) =1] -\frac12\Big|$$
+    $$\advantage{\indcca}{\Pi,\adv} = \Big| \Pr[\pcnotionstyle{Priv\pcmathhyphen{}}\indcca_\Pi^\adv(\secpar) =1] -\frac12\Big|$$
     is a negligible function.
 \end{definition}
 
@@ -222,7 +222,7 @@ The strategy is outlined in the figure below:
         % \draw[thick, ->] (8,4)--(9,4) node[anchor=south east] {$c^*$};
         % \draw[thick, ->] (9,3)--(8,3) node[anchor=south west] {$m$};
         \draw[thick, ->] (8,2)--(9,2) node[anchor=south east] {$c^*$};
-        \draw[thick, ->] (9,1)--(8,1) node[anchor=south west] {$b$};
+        \draw[thick, ->] (9,1)--(8,1) node[anchor=south west] {$b'$};
         % Pseudocode
         \draw (3, 7) node[anchor=west] {1. $x \getsr \{0, 1\}^n$};
         \draw (3, 6) node[anchor=west] {2. $y = F(x)$};
@@ -252,11 +252,11 @@ Else, we guess random.
 
 
 Now we argue that 
-$$|\Pr[B^{F_n(\cdot)}(1^n) = 1] - \Pr[\mb^{F_n(\cdot)}(1^n) = 1]|$$
+$$|\Pr[\mb^{F_n(\cdot)}(1^n) = 1] - \Pr[\mb^{f(\cdot)}(1^n) = 1]|$$
 is non-negligible.
 
 \begin{align*}
-    |\Pr[B^{F_n(\cdot)}(1^n) = 1] - \Pr[\mb^{F_n(\cdot)}(1^n) = 1]| &\ge \frac{1}{2} + \epsilon(n) - (\frac{1}{2} + \frac{q(n)}{2^n}) \\
+    |\Pr[B^{F_n(\cdot)}(1^n) = 1] - \Pr[\mb^{f(\cdot)}(1^n) = 1]| &\ge \frac{1}{2} + \epsilon(n) - (\frac{1}{2} + \frac{q(n)}{2^n}) \\
     &= \epsilon(n) - \frac{q(n)}{2^n}
 \end{align*}
 \qed
@@ -470,7 +470,7 @@ A solution is to use different keys for each PRF, but this isn't too efficient, 
 In particular, we'll claim that applying a universal hash function to the input and then applying the block cipher is a secure MAC.
 
 \begin{definition}[Universal Hash Function]
-    A function $h : \mathcal{F} \times \mathcal{F}^* \to \mathcal{F}$ (where $\mathcal{F}$ is a field of size $2^m$) is a universal hash function if for all $m, m' \in \mathcal{F}^{\le \ell}$ (i.e. $m$ and $m'$ have length at most $\ell$),
+    A function $h : \mathcal{F} \times \mathcal{F}^* \to \mathcal{F}$ (where $\mathcal{F}$ is a field of size $2^m$) is a universal hash function if for all $m, m' \in \mathcal{F}^{\le \ell}$ where $m \neq m'$ (i.e. $m$ and $m'$ have length at most $\ell$),
     \[
         \Pr_s(h(s, m) = h(s, m')) \le \frac{\ell}{\abs{F}}
     .\]

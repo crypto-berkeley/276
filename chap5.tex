@@ -34,13 +34,13 @@ We say that the digital signature scheme is secure if the probability that the a
 
 \section{One-time Digital Signature}
 \label{lampart}
-An one-time digital signature has the same syntax and correctness requirement as that of a digital signature scheme except that in the security game the adversary is allowed to call the signing oracle only once (hence the name one-time). We will now give a construction of one-time signature scheme from the assumption that one-way functions exists.
+A one-time digital signature has the same syntax and correctness requirement as that of a digital signature scheme except that in the security game the adversary is allowed to call the signing oracle only once (hence the name one-time). We will now give a construction of one-time signature scheme from the assumption that one-way functions exists.
 
 Let $f: \bin^n \rightarrow \bin^n$ be a one-way function.
 \begin{itemize}
 \item $\Gen(1^n)$: On input the message length (in unary) $1^n$, $\Gen$ does the following:
 \begin{enumerate}
-    \item Chooses $x_{i,b} \gets \bin^n$ for each $i \in [n]$ and $b \in \bin$.
+    \item Chooses $x_{i,b} \overset{\$}{\gets} \bin^n$ for each $i \in [n]$ and $b \in \bin$.
     \item Output $vk = \left[ \begin{array}{ccc}
 f(x_{1,0}) & \ldots & f(x_{n,0}) \\
 f(x_{1,1}) & \ldots & f(x_{n,1}) \\
@@ -194,7 +194,7 @@ Let us define a $(2{*}, {*})$-UOWHF to be a hash function that takes inputs $x$ 
     
     For any $x \in \bit^*$, let us split it into chunks: $x=x_1 || \dots || x_t$ where $|x_i|=2n$ for $i=1,\dots,t-1$, and $0\leq|x_t|\leq 2n$. Then
     \[
-    \text{let } H_s(x)=h_s(x_1)\cdots h_s(x_{t}10^{2n-|x_t|-1})
+    \text{let } H_s(x)=h_s(x_1) || h_s(x_2) || \cdots || h_s(x_{t}10^{2n-|x_t|-1})
     \]
     Finally, let $\mathcal{H}^{2*, *} = \{H_s\}_{s \in \bit^*}$.
 \end{construction}
@@ -218,7 +218,7 @@ If $\mathcal{A}$ breaks the UOWHF security of $H$, then with non-negligible prob
 
 \noindent\textbf{Step IV: Full-Fledged UOWHFs}. 
 \begin{construction}[(a UOWHF)]
-Let $\mathcal{H}^{2*, *} = \{h_s:\bit^{*}\rightarrow\bit^{*}\}_{s\in\bit^{*}}$ be a $(2*, *)$-UOWHF. Then for any $(s_1,\cdots,s_n) \in \bit^*$, any $n, t\in\mathbb{N}$ and $x\in\bit^{2^t\cdot n}$, we define
+Let $\mathcal{H}^{2*, *} = \{h_s:\bit^{2*}\rightarrow\bit^{*}\}_{s\in\bit^{*}}$ be a $(2*, *)$-UOWHF. Then for any $(s_1,\cdots,s_n) \in \bit^*$, any $n, t\in\mathbb{N}$ and $x\in\bit^{2^t\cdot n}$, we define
 \[
     H_{s_1,\dots,s_n}(x)=(t,h_{s_t}(\cdots(h_{s_2}(h_{s_1}(x)))\cdots))
 \]
@@ -330,7 +330,7 @@ where $|D_n| > |R_n|$ is a family of collision resistant hash function ensemble 
 \item $\Sampler(1^n) \to i:$ On input $1^n$, $\Sampler$ outputs an index $i \in I_n$.
 \item $\Eval(i,x) = h_i(x):$ On input $i$ and $x \in D_n$, $\Eval$ algorithm outputs $h_i(x)$. 
 \item $\forall$ PPT $\adv$ we have
-\[\Pr[i \gets \Sampler(1^n), (x,x') \gets \adv(1^n,i) : h_i(x) = h_i(x') \wedge x \neq x'] \leq \negl(n)\]
+\[\Pr[i \gets \Sampler(1^n), (x,x') \gets \adv(1^n,i) : h_i(x) = h_i(x') \wedge x \neq x'] \leq \negl\]
 \end{enumerate}
 
 
@@ -370,7 +370,7 @@ We now explain how to combine collision-resistant hash functions and one-time si
 
 \subsection{One-time Signature Scheme for Long Messages}
 We first observe that the CRHF family $H$ that we constructed earlier compresses $2n$ bits to $n$ bits (also called as 2-1 CRHF). We will now give an extension that compresses an arbitrary long string to $n$ bits using a 2-1 CRHF.
-\paragraph{Merkle-Damgard CRHF.} The sampler for this CRHF is same as that of 2-1 CRHF. Let $h$ be the sampled hash function. To hash a string $x$, we do the following. Let $x$ be a string of length $m$ where $m$ is an arbitrary polynomial in $n$. We will assume that $m = kn$ (for some $k$) or otherwise, we can pad $x$ to this length. We will partition  the string $x$ into $k$ blocks of length $n$ each. For simplicity, we will assume that $k$ is a perfect power of $2$ or we will again pad $x$ appropriately. We will view these $k$-blocks as the leaves of a complete binary tree of depth $\ell = \log_2 k$. Each intermediate node is associated with a bit string $y$ of length at most $\ell$ and the root is associated with the empty string. We will assign a $\tag \in \bin^n$ to each node in the tree. The $i$-th leaf is assigned $\tag_i$ equal to the $i$-block of the string $x$. Each intermediate node $y$ is assigned a $\tag_y = h(\tag_{y\|0}\| \tag_{y \| 1})$. The output of the hash function is set to be the $\tag$ value of the root. Notice that if there is a collision for this CRHF then there are exists one intermediate node $y$ such that for two different values $\tag_{y\|0},\tag_{y\|1}$ and $\tag'_{y\|0},\tag'_{y\|1}$ we have, $h(\tag_{y\|0},\tag_{y\|1}) = \tag'_{y\|0},\tag'_{y\|1}$. This implies that there is a collision for $h$. 
+\paragraph{Merkle-Damgård CRHF.} The sampler for this CRHF is same as that of 2-1 CRHF. Let $h$ be the sampled hash function. To hash a string $x$, we do the following. Let $x$ be a string of length $m$ where $m$ is an arbitrary polynomial in $n$. We will assume that $m = kn$ (for some $k$) or otherwise, we can pad $x$ to this length. We will partition  the string $x$ into $k$ blocks of length $n$ each. For simplicity, we will assume that $k$ is a perfect power of $2$ or we will again pad $x$ appropriately. We will view these $k$-blocks as the leaves of a complete binary tree of depth $\ell = \log_2 k$. Each intermediate node is associated with a bit string $y$ of length at most $\ell$ and the root is associated with the empty string. We will assign a $\tag \in \bin^n$ to each node in the tree. The $i$-th leaf is assigned $\tag_i$ equal to the $i$-block of the string $x$. Each intermediate node $y$ is assigned a $\tag_y = h(\tag_{y\|0}\| \tag_{y \| 1})$. The output of the hash function is set to be the $\tag$ value of the root. Notice that if there is a collision for this CRHF then there are exists one intermediate node $y$ such that for two different values $\tag_{y\|0},\tag_{y\|1}$ and $\tag'_{y\|0},\tag'_{y\|1}$ we have, $h(\tag_{y\|0},\tag_{y\|1}) = \tag'_{y\|0},\tag'_{y\|1}$. This implies that there is a collision for $h$. 
 
 \paragraph{Construction.} We will now use the Merkle-Damgard CRHF and the one-time signature scheme that we constructed earlier to get a one-time signature scheme for signing longer messages. The main idea is simple: we will sample a $(sk,vk)$ for signing $n$-bit messages and to sign a longer message, we will first hash it using the Merkle-Damgard hash function to $n$-bits and then sign on the hash value. The security of the construction follows directly from the security of the one-time signature scheme since the CRHF is collision-resistant. 
 
@@ -613,9 +613,9 @@ This scheme is called the \emph{Schnorr signature scheme}. Given a group $G$ of 
 
 \section{BLS Signatures}
 
-\paragraph{Bilinear Pairings.} Recall that we used prime order groups $\mathbb{G}$ to build the Schnorr signature scheme. Today we will introduce another mathematical object, pairing friendly groups, which support a new ``bilinear pairing'' operation defined as follows. Let $\mathbb{G}_1$, $\mathbb{G}_2$ and $\mathbb{G}_T$ be groups of prime order $p$. We define a bilinear pairing $e: G_1 \times G_2 \rightarrow \mathbb{G}_T$ to be an \emph{efficiently} computable map that satisfies the following properties:
+\paragraph{Bilinear Pairings.} Recall that we used prime order groups $\mathbb{G}$ to build the Schnorr signature scheme. Today we will introduce another mathematical object, pairing friendly groups, which support a new ``bilinear pairing'' operation defined as follows. Let $\mathbb{G}_1$, $\mathbb{G}_2$ and $\mathbb{G}_T$ be groups of prime order $p$. We define a bilinear pairing $e: \mathbb{G_1} \times \mathbb{G_2} \rightarrow \mathbb{G}_T$ to be an \emph{efficiently} computable map that satisfies the following properties:
 \begin{itemize}
-    \item Bilinearity: For all $a, b \in \mathbb{Z}_p$ and $g_1 \in G_1, g_2 \in G_2$, we have $e(g_1^a, g_2^b) = e(g_1, g_2)^{ab}$.
+    \item Bilinearity: For all $a, b \in \mathbb{Z}_p$ and $g_1 \in \mathbb{G_1}, g_2 \in \mathbb{G_2}$, we have $e(g_1^a, g_2^b) = e(g_1, g_2)^{ab}$.
     \item Non-degenerate: $e(g_1, g_2) \neq 1_{\mathbb{G}_T}$.
 \end{itemize}
 Observe that in any group, by using the group operation, one can compute ``additions'' of the scalar exponents, but in pairing friendly groups one can additionally compute \emph{one} ``multiplication'' of the scalar exponents.

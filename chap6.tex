@@ -283,7 +283,7 @@ The national institute of standards and technology (NIST) opened a call for post
 \end{definition}
 The Learning With Errors assumption is commonly referred to as a Lattice based assumption because there is a reduction from Search/Decision LWE to a ``worst-case'' lattice problem.
 
-The above assumptions have been stated with respect to some abstract distribution $\chi$ over $\mathbb{Z}_q$. But what do we actually choose this distribution to be? In the extreme case of $\chi = 0$, the LWE problem is trivial as one can simply use Gaussian Elimination. In the other extreme if $\chi$ is uniform over $\mathbb{Z}_q$, then the LWE problem is information theoretically hard (but not very useful for cryptography). We will be interested in the intermediate case where $\chi$ is a \emph{small} distribution over $\mathbb{Z}_q$, centered around 0. For eg: $\chi$ is a uniform distribution over $[-B, B]$ for some $B \ll q/2$. This will allow us to do build interesting cryptographic primitives like public key encryption and signature schemes. For provable reductions to lattice problems, we set $\mathsf{stddev}(\chi) = \Omega(\sqrt{n})$. However, there is a gap between the best known attacks on LWE and the best known reductions to lattice problems. As a result, much more aggressive parameters are used in practice, chosen based on the best known attacks. Typical parameters for LWE are $n = 512$, $q = 3329$, $\mathsf{supp}(\chi) = [-3,3]$, and $m = 768$. \cite{EPRINT:AlbPlaSco15} provides a lattice estimator \url{https://github.com/malb/lattice-estimator} that can be used to estimate the number of bits of security provided by a given set of LWE parameters.
+The above assumptions have been stated with respect to some abstract distribution $\chi$ over $\mathbb{Z}_q$. But what do we actually choose this distribution to be? In the extreme case of $\chi = 0$, the LWE problem is trivial as one can simply use Gaussian Elimination. In the other extreme if $\chi$ is uniform over $\mathbb{Z}_q$, then the LWE problem is information theoretically hard (but not very useful for cryptography). We will be interested in the intermediate case where $\chi$ is a \emph{small} distribution over $\mathbb{Z}_q$, centered around 0. For example: $\chi$ is a uniform distribution over $[-B, B]$ for some $B \ll q/2$. This will allow us to do build interesting cryptographic primitives like public key encryption and signature schemes. For provable reductions to lattice problems, we set $\mathsf{stddev}(\chi) = \Omega(\sqrt{n})$. However, there is a gap between the best known attacks on LWE and the best known reductions to lattice problems. As a result, much more aggressive parameters are used in practice, chosen based on the best known attacks. Typical parameters for LWE are $n = 512$, $q = 3329$, $\mathsf{supp}(\chi) = [-3,3]$, and $m = 768$. \cite{EPRINT:AlbPlaSco15} provides a lattice estimator \url{https://github.com/malb/lattice-estimator} that can be used to estimate the number of bits of security provided by a given set of LWE parameters.
 
 \subsection{LWE $\to$ LWE-SKE}
 As a first step, we will see how to build a symmetric key encryption scheme from LWE.
@@ -318,7 +318,7 @@ Now to build public key encryption, we \emph{delegate} the power to create LWE s
 Observe that $b$ is actually just $m$ encryptions of $0$. Moreover, $m$ influences the size of the public key and we would like to make this as small as possible. The exact parameter will be chosen based on what we can actually prove security for.
 
 \begin{proof}
-    For correctness observe that as before $c_1 - \langle c_0, s\rangle = b^\intercal u + \lfloor\frac{q}{2}\rfloor\mu - \langle A^\intercal u, s\rangle = u^\intercal e + \lfloor\frac{q}.{2}\rfloor\mu$. $\mathsf{Decode}$ will recover $\mu$ if $|u^\intercal e| < \lfloor\frac{q}{4}\rfloor$, and one can choose $\chi$ to ensure this with high probability.
+    For correctness observe that as before $c_1 - \langle c_0, s\rangle = b^\intercal u + \lfloor\frac{q}{2}\rfloor\mu - \langle A^\intercal u, s\rangle = u^\intercal e + \lfloor\frac{q}{2}\rfloor\mu$. $\mathsf{Decode}$ will recover $\mu$ if $|u^\intercal e| < \lfloor\frac{q}{4}\rfloor$, and one can choose $\chi$ to ensure this with high probability.
 
     For security, we describe a sequence of hybrids starting from the public-key IND-CPA game, where the challenger receives $(\mu_0, \mu_1)$, and responds with an encryption of $\mu_0$. We then end in a hybrid where the challenger responds with an encryption of $\mu_1$, while showing that consecutive hybrids are indistinguishable.
 
@@ -337,9 +337,9 @@ Observe that $b$ is actually just $m$ encryptions of $0$. Moreover, $m$ influenc
     The remaining hybrids are symmetric to end in the IND-CPA game with challenge response set to an encryption of $\mu_1$.
 \end{proof}
 \subsection{Improving Efficiency}
-It is worthwhile asking whether the parameter $m$ can be made smaller. Recall that when using the leftover hash lemma we needed to set $m = n\log{q} + 2\lambda$ but we got a statistical guarantee of indistinguishability. This \emph{overkill} in some sense because we still rely on the LWE assumption in a different hybrid. We can then ask the question of whether it's possible to improve efficiency and obtain \emph{compact} LWE public-key encryption if we relied on computational hardness instead of a statistical guarantee.
+It is worthwhile asking whether the parameter $m$ can be made smaller. Recall that when using the leftover hash lemma we needed to set $m = n\log{q} + 2\lambda$ but we got a statistical guarantee of indistinguishability. This is \emph{overkill} in some sense because we still rely on the LWE assumption in a different hybrid. We can then ask the question of whether it's possible to improve efficiency and obtain \emph{compact} LWE public-key encryption if we relied on computational hardness instead of a statistical guarantee.
 
-This was the approach taken in~\cite{RSA:LinPei11}, where they used the hardness of LWE instead of the leftover hash lemma to switch ciphertexts to uniformly random strings in the proof of IND-CPA security. The scheme is essentially identical to the previous construction except, the secret key is also sampled from the error distribution instead of uniformly over the entire field. This is necessary for correctness. But we are no longer working with LWE samples as the secret key is no longer uniform. These new type of instance are referred to as Hermite normal form LWE instances. We will later show that distinguishing HNF-LWE samples from a uniform distribution is just as hard distinguishing LWE samples from the uniform distribution.
+This was the approach taken in~\cite{RSA:LinPei11}, where they used the hardness of LWE instead of the leftover hash lemma to switch ciphertexts to uniformly random strings in the proof of IND-CPA security. The scheme is essentially identical to the previous construction except, the secret key is also sampled from the error distribution instead of uniformly over the entire field. This is necessary for correctness. But we are no longer working with LWE samples as the secret key is no longer uniform. These new types of instances are referred to as Hermite normal form LWE instances. We will later show that distinguishing HNF-LWE samples from a uniform distribution is just as hard distinguishing LWE samples from the uniform distribution.
 
 \begin{definition}[HNF-LWE]
     Let $m,n,q \in \mathbb{N}$ and $\chi$ be a distribution over $\mathbb{Z}_q$. The Learning With Errors (LWE) $\LWE_{n,m,q,\chi}$ problem is defined as follows:
@@ -354,7 +354,7 @@ This was the approach taken in~\cite{RSA:LinPei11}, where they used the hardness
 \begin{proof}
     Parse $A$ and $b$ as:
     \[A:\begin{bmatrix} A_1 \\ A_2 \end{bmatrix} \quad b:\begin{bmatrix} b_1 \\ b_2 \end{bmatrix} = \begin{bmatrix} A_1 s + e_1 \\ A_2 s + e_2 \end{bmatrix}\]
-    and bbort if $A_1$ is not invertible. This happens with probability $\le 0.91$. Next, provide
+    and abort if $A_1$ is not invertible. This happens with probability $\le 0.91$. Next, provide
     \[\begin{pmatrix} \tilde{A} := A_2 \cdot A_1^{-1} \\ \tilde{b} := -A_2 \cdot A_1^{-1} \cdot b_1 + b_2 \end{pmatrix}\] to the HNF-LWE solver. Note that $\tilde{b}$ simplifies to
     \begin{equation*}
         \begin{aligned}
@@ -668,14 +668,15 @@ The final Cramer-Shoup construction achieves CCA-2 security by combining two HPS
 
 \subsection{The Scheme}
 
-$\mathcal{G}\text{en}(1^n)$:
+\begin{itemize}
+\item $\mathcal{G}\text{en}(1^n)$:
 \begin{algorithmic}
     \State $(pk,sk) \leftarrow \mathcal{K}\mathcal{G}\text{en}(1^n)$
     \State $(pk',sk') \leftarrow \mathcal{K}\mathcal{G}\text{en}(1^n)$
     \State Output $((pk,pk'),(sk,sk'))$
 \end{algorithmic}
 
-$\text{Enc}(pk,m)$:
+\item $\text{Enc}(pk,m)$:
 \begin{algorithmic}
     \State Sample $x \leftarrow \mathbb{L}$ with witness $w$
     \State $e = \mathcal{H}_{pk}(x,w) \cdot m$
@@ -684,13 +685,15 @@ $\text{Enc}(pk,m)$:
     \State Output $(x,e,\pi)$
 \end{algorithmic}
 
-$\text{Dec}(sk,(x,e,\pi))$:
+\item $\text{Dec}(sk,(x,e,\pi))$:
 \begin{algorithmic}
     \If{$\pi \neq \mathcal{H}'_{sk}(x)$}
         \State Output $\perp$
     \EndIf
     \State Output $e/\mathcal{H}_{sk}(x)$
 \end{algorithmic}
+\end{itemize}
+
 \subsection{Final Security Theorem}
 
 \begin{theorem}
