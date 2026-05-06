@@ -97,7 +97,7 @@ IBE contains four steps: \emph{Setup}, \emph{KeyGen}, \emph{Enc}, and \emph{Dec}
 IBE relies on a trusted third party called Private Key Generator(PKG). 
 In first step, PKG gets a Master Public Key ($mpk$) and Master Signing Key ($msk$) from $Gen(1^n)$. 
 Then a user with an ID (in this example, ``Mike''), sends his ID to the PKG. 
-The PKG generates the Signing Key of Mike with $KeyGen(msk, id)$ ans sends it back. 
+The PKG generates the Signing Key of Mike with $KeyGen(msk, id)$ and sends it back. 
 Another user, Alice, wants to send an encrypted message to Mike. 
 She only has $mpk$ and Mike's ID. 
 So she encrypts the message with $c=Enc(mpk, id=Mike, m)$, and sends the encrypted message $c$ to Mike. 
@@ -164,10 +164,10 @@ We denote the experiment in the following order:
 
 \subsection{IBE Construction from Pairing}
 We then present a concrete IBE construction from pairing.
-First, we will give the hardness assumption in this scheme called \textbf{bilinear Diffe-Hellman} assumption, or BDH. 
+First, we will give the hardness assumption in this scheme called \textbf{bilinear Diffie-Hellman} assumption, or BDH. 
 This assumption says that given random element $g_0^{\alpha},g_0^{\beta},g_0^{\gamma}\in\mathbb{G_0}$ and a few additional terms, the quantity $e(g0,g1)^{\alpha\beta\gamma}\in\mathbb{G}_T$ is computationally indistinguishable from a random element in GT.
 
-\begin{definition}[Decisional bilinear Diffe-Hellman]
+\begin{definition}[Decisional bilinear Diffie-Hellman]
     Let $e: \mathbb{G}_0\times\mathbb{G}_1\rightarrow\mathbb{G}_T$ be a pairing where $\mathbb{G}_0,\mathbb{G}_1,\mathbb{G}_T$ are cyclic groups of prime order $q$ with generators $g_0 \in \mathbb{G}_0$ and $g_1 \in \mathbb{G}_1$. For a given adversary $\mathcal{A}$, the following distribution is distinguishable: 
     \[
     \{g_0^{\alpha},g_1^{\alpha},g_0^{\beta},g_1^{\gamma},e(g_0,g_1)^{\alpha\beta\gamma},  \alpha,\beta,\gamma\stackrel{\$}{\gets}\mathbb{Z}_q\} \approx^{c}
@@ -217,7 +217,7 @@ We then prove the security property under random oracle model.
 
     The adversary $\mathcal{B}$ works as follows:
     \begin{enumerate}
-        \item $\mathcal{B}$ receives 5 elements as input $\{g^{\alpha},g^{\beta},g^{\gamma},z,  \alpha,\beta,\gamma\stackrel{\$}{\gets}\mathbb{Z}_q,z\in\mathbb{G}\}$, and $\mathcal{B}$ need to determine whether $z=e(g,g)^{\alpha\beta\gamma}$ or not. 
+        \item $\mathcal{B}$ receives 5 elements as input $\{g, g^{\alpha},g^{\beta},g^{\gamma},z\}$, where $\alpha,\beta,\gamma\stackrel{\$}{\gets}\mathbb{Z}_q,z\in\mathbb{G}$, and $\mathcal{B}$ need to determine whether $z=e(g,g)^{\alpha\beta\gamma}$ or not. 
         \item $\mathcal{B}$ send IBE public parameter $mpk=g^{\alpha}$ to IBE adversary $\mathcal{A}$.
         \item Then $\mathcal{A}$ will make multiple $sk_{id}$ queries to $\mathcal{B}$. $\mathcal{B}$ responds them by (1) Choose $\rho\stackrel{\$}{\gets}\mathbb{Z}_q$ (2) Setting $H(id)=g^{\rho}$ (3) set the secret key be $sk_{id}=H(id)^{\alpha}=g^{\rho\cdot\alpha}$. One \textbf{exception} is that $\mathcal{B}$ will set a random $id'$ whose $H(id')=g^\beta$.
         \item After receiving the key query, $\mathcal{A}$ outputs $(id^{*}, m_0,m_1)$.  
@@ -238,18 +238,18 @@ Given a secure IBE $\mathcal{E}_{id}=(G,K,E,D)$ with id space $\mathcal{ID}$ and
 
 We have the following theorem,
 \begin{theorem}
-    Let $\mathcal{E}_{id}$ be a secure IBE with message space is super-poly. Then the derive signature scheme $\mathcal{S}$ is a secure digital signature scheme. 
+    Let $\mathcal{E}_{id}$ be a secure IBE with message space is super-poly. Then the derived signature scheme $\mathcal{S}$ is a secure digital signature scheme. 
 \end{theorem}
 \begin{proof}
     Let $\mathcal{A}$ be an adversary that breaks the digital signature scheme, we can construct another adversary $\mathcal{B}$ such that breaks the IBE security.
 
-    The BIE adversary $\mathcal{B}$ is modelled as follows:
+    The IBE adversary $\mathcal{B}$ is modelled as follows:
     \begin{enumerate}
         \item $\mathcal{B}$ receives $mpk$ from the challenger, and forward $mpk$ as a signature public key to $\mathcal{A}$. 
         \item $\mathcal{A}$ makes a series of signing queries $m_0,\dots,m_n$ to $\mathcal{B}$. $\mathcal{B}$ responds by issuing the corresponding key query to the challenger and forwarding the answer back the response to $\mathcal{A}$. 
         \item $\mathcal{A}$ will output a signature forgery $(m,\sigma)$ which it didn't issue the sign query $m$. 
         \item $\mathcal{B}$ then choose two random message $t_0,t_1\stackrel{\$}{\gets}\mathcal{M}_{IBE}$ and issue encryption query with the identity $m$.
-        \item $\mathcal{B} $gets back the ciphertext $c\stackrel{\$}{\gets}E(mpk,m,t_b)$ for $b\in{0,1}$. Then it runs $t'\gets D(\sigma,c)$ and output $b'=t'$. 
+        \item $\mathcal{B}$ gets back the ciphertext $c\stackrel{\$}{\gets}E(mpk,m,t_b)$ for $b\in{0,1}$. Then it runs $t'\gets D(\sigma,c)$ and output $b'=t'$. 
     \end{enumerate}
     We observe that 
     \begin{itemize}
@@ -333,8 +333,9 @@ The construction of the leveled FHE scheme is as follows. We use the LWE problem
         -s' \\
         1
     \end{bmatrix} \in \mathbb{Z}_q^{n+1}$. 
+    Output $(ek = s', sk = s)$
 
-    \item $\mathsf{Enc}(\sk \in \mathbb{Z}_q^{n+1}, m \in \mathbb{Z}_2) \rightarrow C \in \mathbb{Z}_q^{l \times (n+1)}$: Sample $A \gets \mathbb{Z}_q^{l \times n}$ and $e \gets \chi^{l}$. Define $B = A \| As' + e$ and $C = B + m \cdot G$ for a fixed gadget~\cite{EC:MicPei12} matrix $G \in \mathbb{Z}_q^{l \times (n+1)}$.
+    \item $\mathsf{Enc}(\sk = s \in \mathbb{Z}_q^{n+1}, m \in \mathbb{Z}_2) \rightarrow C \in \mathbb{Z}_q^{l \times (n+1)}$: Sample $A \gets \mathbb{Z}_q^{l \times n}$ and $e \gets \chi^{l}$. Define $B = A \| As' + e$ and $C = B + m \cdot G$ for a fixed gadget~\cite{EC:MicPei12} matrix $G \in \mathbb{Z}_q^{l \times (n+1)}$.
     
     \begin{itemize}
         \item Note that by choice of $B$, we have that $Bs = A(-s') + A(s') + e = e$ is an encryption of zero (with noise). Similarly, $Cs = Bs + mGs = e + mGs$. 
@@ -356,7 +357,7 @@ The construction of the leveled FHE scheme is as follows. We use the LWE problem
         \item Thus if the original ciphertexts errors $||e_1||_{\infty}, ||e_2||_{\infty} \leq B$, then the new cipertext error is bounded by $2B$. 
     \end{itemize} 
 
-    \item $\mathsf{Eval}(+, C_1, C_2)$: Output $C = \mathsf{Flatten}(C_1) \times C_2$. 
+    \item $\mathsf{Eval}(\times, C_1, C_2)$: Output $C = \mathsf{Flatten}(C_1) \times C_2$. 
 
     \begin{itemize}
         \item We utilize the $\mathsf{Flatten}$ operation so that the dimensions match for matrix multiplication. 
@@ -432,7 +433,7 @@ Then construct a CCA-2 secure encryption scheme as follows:
     \begin{enumerate}
         \item Compute $(pk, sk) \leftarrow G(1^n)$. 
         
-        \item Output $pp = pk$ and $msk = sk$. 
+        \item Output $pp = pk$ (public parameters) and $msk = sk$. 
     \end{enumerate}
 
     \item $\mathsf{Enc}(pk, m)$: 

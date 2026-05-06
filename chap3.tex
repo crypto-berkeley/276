@@ -11,6 +11,7 @@ In particular, it is tricky to define indistinguishability for a single pair of 
 Therefore, in order for our definition to make sense, we will work with collections of distributions, called \emph{ensembles}
 \begin{definition}[Ensemble of Probability Distributions]
 An \emph{ensemble} of probability distributions is a sequence of random variables $\{X_n\}_{n\in \mathbb{N}}$. 
+These random variables don't have to be from the same distribution.
 \end{definition}
 In this definition, $n$ is a parameter.
 Sometimes, we write $\{X_n\}_n$ or even simply $X_n$, when it is clear from context that we are talking about an ensemble.
@@ -33,7 +34,7 @@ We also do not require the ensemble to be efficiently samplable.
 This definition is closely related to the concept of the \textit{statistical distance} between two probability distributions.
 \begin{definition}[Statistical Distance]
 The \emph{statistical distance} between two distributions $X$ and $Y$ is defined as
-$$SD(X, Y) = \frac{1}{2}\sum\limits_{v \in S}|\Pr[X_n = v] - \Pr[Y_n = v]|$$
+$$SD(X_n, Y_n) = \frac{1}{2}\sum\limits_{v \in S}|\Pr[X_n = v] - \Pr[Y_n = v]|$$
 where $S = Support(X_n) \cup Support(Y_n)$.
 \end{definition}
 In fact, we can show that $\Delta_{\ma}(n) \le SD(X_n, Y_n)$.
@@ -411,7 +412,7 @@ We prove this by hybrid argument. Define the hybrid $H_i$ as follows.
 \end{enumerate}
 Note that $H_0 \equiv F$, and $H_l \equiv U_{n+l}$.
 
-Assume for the sake of contradiction that there exits a non-uniform PPT adversary $\ma$ that can distinguish $H_0$ form $H_l$.
+Assume for the sake of contradiction that there exists a non-uniform PPT adversary $\ma$ that can distinguish $H_0$ from $H_l$.
 Define $\epsilon_i := \Pr[\ma(1^n, H_i)=1]$ for $i = 0, 1, \cdots, l$.
 Then there exists a non-negligible function $v(n)$ such that $|\epsilon_0 - \epsilon_l| \geq v(n)$.
 Since
