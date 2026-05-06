@@ -115,6 +115,120 @@ The same idea can be extended to the CDH based public key encryption scheme.
 
 \section{Fujisaki-Okamoto Transformation}
 
+The hybrid construction from the previous section is IND-CPA secure in the random oracle model but remains malleable: nothing ties the asymmetric ciphertext to the symmetric ciphertext. An adversary given access to a decryption oracle can maul the symmetric part while reusing the asymmetric part. The Fujisaki-Okamoto transformation~\cite{C:FujOka99} fixes this by deriving the randomness of the asymmetric ciphertext from both components, and by checking consistency at decryption time (``re-encryption check''). Remarkably, the transformation only requires the asymmetric scheme to be one-way (weaker than IND-CPA) and the symmetric scheme to be one-time secure (weaker than IND-CPA).
+
+Let $\Pi^{\mathsf{asym}} = (\gen, \enc, \dec)$ be a public key encryption scheme with message space $\mathcal{M}$ and randomness space $\mathcal{R}$, and let $\Pi^{\mathsf{sym}} = (\mathsf{Sym}.\enc, \mathsf{Sym}.\dec)$ be a symmetric encryption scheme with key space $\mathcal{K}$ and ciphertext space $\mathcal{C}$. Let $G \colon \mathcal{M} \to \mathcal{K}$ and $H \colon \mathcal{M} \times \mathcal{C} \to \mathcal{R}$ be hash functions modeled as random oracles. Throughout, we follow the convention that $\sk$ includes $\pk$ so that the decryption algorithm may re-run $\Pi^{\mathsf{asym}}.\enc$ during the re-encryption check.
+
+The transformation also requires a non-degeneracy condition on the asymmetric scheme: ciphertexts produced by $\enc$ must have sufficient min-entropy over the encryption randomness. This rules out schemes where an adversary could cause the re-encryption check to pass by chance.
+
+\begin{definition}[$\gamma$-Spreadness]
+    A public key encryption scheme $\Pi^{\mathsf{asym}} = (\gen, \enc, \dec)$ with randomness space $\mathcal{R}$ is $\gamma$-spread if for every $(\pk, \sk) \gets \gen(1^\secpar)$, every message $m \in \mathcal{M}$, and every ciphertext $e$,
+    \[ \Pr_{r \sample \mathcal{R}}[\enc(\pk, m; r) = e] \leq 2^{-\gamma}. \]
+\end{definition}
+
+\begin{construction}[Fujisaki-Okamoto]
+    \hfill
+    \begin{itemize}
+        \item $\gen(1^\secpar)$: Run $\Pi^{\mathsf{asym}}.\gen(1^\secpar)$ to obtain $(\pk, \sk)$. Output $(\pk, \sk)$.
+        \item $\enc(\pk, m)$: Sample $\sigma \sample \mathcal{M}$. Compute $K \gets G(\sigma)$, $c \gets \mathsf{Sym}.\enc(K, m)$, $r \gets H(\sigma, c)$, and $e \gets \Pi^{\mathsf{asym}}.\enc(\pk, \sigma; r)$, where $r$ is used as the randomness of $\Pi^{\mathsf{asym}}.\enc$. Output $(e, c)$.
+        \item $\dec(\sk, (e, c))$: Compute $\sigma' \gets \Pi^{\mathsf{asym}}.\dec(\sk, e)$, $K' \gets G(\sigma')$, $r' \gets H(\sigma', c)$, and $e' \gets \Pi^{\mathsf{asym}}.\enc(\pk, \sigma'; r')$. If $e' \neq e$, output $\bot$. Otherwise, output $\mathsf{Sym}.\dec(K', c)$.
+    \end{itemize}
+\end{construction}
+
+The re-encryption check is what lifts security from CPA to CCA. Intuitively, to produce a valid ciphertext $(e, c)$, the adversary must have queried $H$ on $(\sigma, c)$ for the correct $\sigma$, since otherwise $r = H(\sigma, c)$ is uniform in its view and the re-encryption check fails except with probability $2^{-\gamma}$ by spreadness. This forces the adversary to ``know'' the $\sigma$ underlying any valid ciphertext, which lets the reduction answer decryption queries by scanning the list of $H$ queries rather than using $\sk$.
+
+Note that there is no encryption oracle in the IND-CCA game for public-key encryption, since anyone can encrypt using $\pk$. The only oracle is the decryption oracle.
+
+\begin{theorem}
+    If $\Pi^{\mathsf{asym}}$ is OW-CPA secure and $\gamma$-spread, and $\Pi^{\mathsf{sym}}$ is IND-OT secure, then the Fujisaki-Okamoto transformation is IND-CCA secure in the random oracle model. Concretely, for every PPT adversary $\adv$ making at most $q_D$ decryption queries and $q_G, q_H$ queries to $G, H$, there exist PPT adversaries $\advb, \mathcal{C}$ such that
+    \[
+        \mathsf{Adv}^{\text{IND-CCA}}_{\mathsf{FO}}(\adv)
+        \;\leq\;
+        \frac{q_D}{2^\gamma}
+        \;+\;
+        (q_G + q_H) \cdot \mathsf{Adv}^{\text{OW-CPA}}_{\Pi^{\mathsf{asym}}}(\advb)
+        \;+\;
+        \frac{q_H}{|\mathcal{K}|}
+        \;+\;
+        \mathsf{Adv}^{\text{IND-OT}}_{\Pi^{\mathsf{sym}}}(\mathcal{C}).
+    \]
+\end{theorem}
+
+\begin{proof}
+    We proceed through a sequence of hybrids. Write $\mathsf{Adv}_i$ for the advantage of $\adv$ in Hybrid $i$, and let $\sigma^*$ denote the value sampled during the challenge encryption, with challenge ciphertext $(e^*, c^*)$.
+
+    \begin{itemize}
+        \item \textbf{Hybrid 0}: The real IND-CCA game. By definition, $\mathsf{Adv}_0 = \mathsf{Adv}^{\text{IND-CCA}}_{\mathsf{FO}}(\adv)$.
+
+        \item \textbf{Hybrid 1}: The decryption oracle is simulated without $\sk$. The challenger maintains tables $T_G$ and $T_H$ of all queries to $G$ and $H$ respectively. On a decryption query $(e, c) \neq (e^*, c^*)$:
+              \begin{enumerate}
+                  \item Search $T_H$ for a tuple $(\sigma, c)$ such that $\Pi^{\mathsf{asym}}.\enc(\pk, \sigma; H(\sigma, c)) = e$.
+                  \item If such a $\sigma$ is found, return $\mathsf{Sym}.\dec(G(\sigma), c)$. Otherwise, return $\bot$.
+              \end{enumerate}
+              Fix a decryption query $(e, c)$. Let $\sigma = \Pi^{\mathsf{asym}}.\dec(\sk, e)$, so that by perfect correctness the real oracle accepts $(e, c)$ as valid iff $e = \Pi^{\mathsf{asym}}.\enc(\pk, \sigma; H(\sigma, c))$. If $\adv$ has not queried $H$ on $(\sigma, c)$, then $H(\sigma, c)$ is uniform in $\mathcal{R}$ from $\adv$'s view, and by $\gamma$-spreadness the probability that $\Pi^{\mathsf{asym}}.\enc(\pk, \sigma; H(\sigma, c)) = e$ is at most $2^{-\gamma}$. Hence the simulated and real oracles differ on this query with probability at most $2^{-\gamma}$. Union bounding over all $q_D$ decryption queries,
+              \[
+                  |\mathsf{Adv}_0 - \mathsf{Adv}_1| \leq \frac{q_D}{2^\gamma}.
+              \]
+
+        \item \textbf{Hybrid 2}: The challenger aborts if $\adv$ ever queries $G(\sigma^*)$ or $H(\sigma^*, \cdot)$. Let $\mathsf{Abort}$ denote this event. We bound $\Pr[\mathsf{Abort}]$ by reducing to OW-CPA on $\Pi^{\mathsf{asym}}$. Construct $\advb$ as follows:
+              \begin{enumerate}
+                  \item $\advb$ receives the OW-CPA challenge $(\pk, e^* = \Pi^{\mathsf{asym}}.\enc(\pk, \sigma^*))$ for an unknown $\sigma^* \sample \mathcal{M}$.
+                  \item $\advb$ simulates Hybrid 1 for $\adv$ using the challenge ciphertext $(e^*, c^*)$, where $c^* \gets \mathsf{Sym}.\enc(K^*, m_b)$ for $K^* \sample \mathcal{K}$ chosen freshly by $\advb$.
+                  \item After $\adv$ halts, $\advb$ collects the set $S$ of all first-coordinate arguments queried to $G$ or to $H$ and outputs a uniformly random element of $S$.
+              \end{enumerate}
+              Conditioned on $\mathsf{Abort}$, we have $\sigma^* \in S$, and $\advb$ outputs $\sigma^*$ with probability at least $1/(q_G + q_H)$. Hence
+              \[
+                  |\mathsf{Adv}_1 - \mathsf{Adv}_2|
+                  \leq
+                  \Pr[\mathsf{Abort}]
+                  \leq
+                  (q_G + q_H)\cdot \mathsf{Adv}^{\text{OW-CPA}}_{\Pi^{\mathsf{asym}}}(\advb).
+              \]
+
+        \item \textbf{Hybrid 3}: Replace $K^* = G(\sigma^*)$ with a uniformly random key $\widetilde{K} \sample \mathcal{K}$ in the challenge ciphertext. By Hybrid 2, $\adv$ never queries $G$ on $\sigma^*$, so $G(\sigma^*)$ is uniformly random and independent of $\adv$'s view. Thus
+              \[
+                  \mathsf{Adv}_3 = \mathsf{Adv}_2.
+              \]
+
+        \item \textbf{Hybrid 4}: Abort if there exists a first-coordinate $\sigma$ appearing in $T_H$, with $\sigma \neq \sigma^*$, such that $G(\sigma) = \widetilde{K}$. Since $\widetilde{K}$ is uniform in $\mathcal{K}$ and independent of all values $G(\sigma)$ for $\sigma \neq \sigma^*$, and since there are at most $q_H$ distinct first-coordinates appearing in $T_H$, a union bound gives
+              \[
+                  |\mathsf{Adv}_3 - \mathsf{Adv}_4|
+                  \leq
+                  \frac{q_H}{|\mathcal{K}|}.
+              \]
+
+        \item \textbf{Hybrid 5}: Reduce to IND-OT of $\Pi^{\mathsf{sym}}$. The adversary $\mathcal{C}$ samples fresh random values $\sigma^* \sample \mathcal{M}$ and $r^* \sample \mathcal{R}$, sets
+              \[
+                  e^* \gets \Pi^{\mathsf{asym}}.\enc(\pk, \sigma^*; r^*),
+              \]
+              forwards $(m_0, m_1)$ to its own IND-OT challenger, and receives
+              \[
+                  c^* \gets \mathsf{Sym}.\enc(\widetilde{K}, m_b)
+              \]
+              for a uniformly random hidden key $\widetilde{K} \sample \mathcal{K}$. It then gives $(e^*, c^*)$ to $\adv$ as the challenge ciphertext and simulates all decryption queries exactly as in Hybrid 4.
+
+              In this hybrid, $\adv$ sees exactly one ciphertext under the key $\widetilde{K}$. Indeed, by Hybrid 2 no queried first-coordinate equals $\sigma^*$, and by Hybrid 4 no first-coordinate $\sigma$ appearing in $T_H$ satisfies $G(\sigma) = \widetilde{K}$. Hence every decryption query is answered using a key different from $\widetilde{K}$. Therefore
+              \[
+                  \mathsf{Adv}_5 \leq \mathsf{Adv}^{\text{IND-OT}}_{\Pi^{\mathsf{sym}}}(\mathcal{C}).
+              \]
+    \end{itemize}
+
+    Combining via the triangle inequality,
+    \begin{align*}
+        \mathsf{Adv}^{\text{IND-CCA}}_{\mathsf{FO}}(\adv)
+         & \leq |\mathsf{Adv}_0 - \mathsf{Adv}_1|
+           + |\mathsf{Adv}_1 - \mathsf{Adv}_2|
+           + |\mathsf{Adv}_2 - \mathsf{Adv}_3|
+           + |\mathsf{Adv}_3 - \mathsf{Adv}_4|
+           + \mathsf{Adv}_5 \\
+         & \leq
+           \frac{q_D}{2^\gamma}
+           + (q_G + q_H)\cdot \mathsf{Adv}^{\text{OW-CPA}}_{\Pi^{\mathsf{asym}}}(\advb)
+           + 0
+           + \frac{q_H}{|\mathcal{K}|}
+           + \mathsf{Adv}^{\text{IND-OT}}_{\Pi^{\mathsf{sym}}}(\mathcal{C}).
+    \end{align*}
+\end{proof}
 
 \section{Post-Quantum Public Key Encryption}
 The public-key encryption schemes discussed so far, rely on the difficulty of problems like factorization or discrete logarithms. In 1994, Peter Shor showed that these problems can be solved efficiently on a quantum computer~\cite{FOCS:Shor94}. Even though we do not have large-scale quantum computers capable of breaking current encryption schemes, there are two reasons to begin the transition of public-key encryption to quantum-resistant schemes:
@@ -583,11 +697,6 @@ $\text{Dec}(sk,(x,e,\pi))$:
 If $\mathcal{H}$ is a 1-smooth HPS, $\mathcal{H}'$ is a 2-smooth HPS, and CRHF is a collision-resistant hash function, then the scheme is CCA-2 secure.
 \end{theorem}
 
-\begin{proof}
-We prove security through a sequence of hybrid games, showing each transition is indistinguishable to a PPT adversary. Let $A$ be any PPT adversary in the CCA2 game.
-
-First, we establish a crucial lemma:
-
 \begin{lemma}[Key Soundness Lemma]
 For any ciphertext decryption query $(x,e,\pi)$ that $A$ makes, if $\text{Dec}((sk,sk'),(x,e,\pi)) \neq \perp$ then $x \in \mathbb{L}$ except with negligible probability.
 \end{lemma}
@@ -599,7 +708,10 @@ Suppose for contradiction that $x \notin \mathbb{L}$ but the decryption doesn't 
 By the 2-smoothness property of $\mathcal{H}'$, when $x \notin \mathbb{L}$, the value $\mathcal{H}'_{sk'}(x,t)$ is statistically indistinguishable from random, even given $pk'$. Therefore, the probability that $A$ can generate such a $\pi$ is at most $1/|\Pi|$, which is negligible.
 \end{proof}
 
-Now we proceed with the hybrid games:
+\begin{proof}
+We prove security through a sequence of hybrid games, showing each transition is indistinguishable to a PPT adversary. Let $A$ be any PPT adversary in the CCA2 game. We use the Key Soundness Lemma above to handle decryption oracle queries.
+
+We proceed with the hybrid games:
 
 \begin{itemize}
     \item $\mathcal{G}_0$: The real CCA2 game.
