@@ -82,7 +82,7 @@ Note that this is not a particularly good definition of security, in the sense t
 Specifically, all that $\ma$ can do is take a look at the encryption of $m_0$ and $m_1$ and must decide which one is the plaintext.
 We need a more usable and realistic definition of security.
 For this reason, we will allow the attacker to have oracle access to the encryption function, $\enc(k, \cdot)$.
-In other words, $\ma$ will be able to craft their own ciphertexts, which can then use to break the security of the encryption scheme.
+In other words, $\ma$ will be able to craft their own ciphertexts, which it can then use to break the security of the encryption scheme.
 We shall dub this new definition of security \textit{Chosen Plaintext Attack Security}, or \textit{CPA Security} for short.
 
 %Informally, this means that the ciphertext $c$ should hide everything about $m$ that Eve doesn't already know.
