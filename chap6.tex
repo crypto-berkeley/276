@@ -98,7 +98,7 @@ The construction is almost identical except that we replace the hardness concent
 \begin{itemize}
     \item $\gen(1^\secpar)$: Run $\mathsf{TDF}.\gen(1^\secpar)$ to obtain $(s,t)$. Set $\pk = s$ and $\sk = t$.
     \item $\enc(\pk, m)$: Sample $x \sample D(s)$ and compute $y \gets f(s, x)$. Encrypt $m$ using a symmetric encryption scheme with key $H(x)$ as $z \gets \mathsf{Sym}.\enc(H(x), m)$. Output $c = (y, z)$.
-    \item $\dec(\sk, c)$: Parse $c = (y, z)$ and compute $x \gets f^{-1}(t, y)$. Decrypt $z$ using the symmetric encryption scheme with key $H(x)$ as $m \gets z \oplus \mathsf{Sym}.\dec(H(x), z)$. Output $m$.
+    \item $\dec(\sk, c)$: Parse $c = (y, z)$ and compute $x \gets f^{-1}(t, y)$. Decrypt $z$ using the symmetric encryption scheme with key $H(x)$ as $m \gets \mathsf{Sym}.\dec(H(x), z)$. Output $m$.
 \end{itemize}
 The same idea can be extended to the CDH based public key encryption scheme.
 

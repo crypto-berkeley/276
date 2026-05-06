@@ -145,7 +145,7 @@ The adversary should not be able to break semantic security for some other ident
 \begin{definition}[Security of IBE]
     For an IBE scheme $\mathcal{E}_{id}=(G,K,E,D)$ is secure if $\forall$ nuPPT $\mathcal{A}$,
     \[
-    \Pr[\text{Exp}_{\pi,\mathcal{A}}^{IBE,CPA}(n)=1]=\text{negl}(n)
+    |\Pr[\text{Exp}_{\pi,\mathcal{A}}^{IBE,CPA}(n)=1]-\frac{1}{2}|=\text{negl}(n)
     \]
 \end{definition}
 

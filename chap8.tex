@@ -1243,7 +1243,7 @@ Starting from this Game 0, we can derive Game 1 to 4, so that it is clear that a
 For $\forall CT = (c_0, c_1, \Pi)$, we have that if $V(\sigma, (c_0, c_1), \Pi) = 1$, $\mathsf{Dec}(sk_0, c_0) = \mathsf{Dec}(sk_1, c_1).$
 \end{lemma}
 
-The lemma is a direct result of the soundness guarantee of the NICK proof system. Now we are ready to construct the games:
+The lemma is a direct result of the soundness guarantee of the NIZK proof system. Now we are ready to construct the games:
 \begin{itemize}
     \item Game 1: instead of $(P, V)$, its simulator is used to provide the proof $\Pi^*$. Specifically, we  have $(\sigma, \tau) \gets S_1(1^n)$ and $\Pi^* \gets S_2(\tau, (c_0^*, c_1^*))$. Now $\Pi^*$ does not contain information about $b$.
     \item Game 2: note that only $sk_0$ is used to answer all the decryption queries by the adversary, as a result, we can set $c_1^*\gets \mathsf{Enc}(pk_1, 0^{|m_1|})$. This works because of the indistinguishability of the public-key encryption scheme. Now $c_1^*$ does not contain information about $b$.
