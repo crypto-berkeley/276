@@ -26,7 +26,7 @@ To understand the above definition, let's consider two languages over a pair of 
 
 \paragraph{Interactive Proof for Graph Non-Isomorphism (GNI).}  Unlike the case of GI, for GNI, there is no succinct (e.g., linear in the size of graphs) information that the prover can provide, and consequently, no ``efficient'' (polynomial time in the graphs) verification that the verifier can do. This is where the {\em power of interaction} comes in. In other words, since GNI is not believed to have short proofs, an {\em interactive} proof could offer the prover a mechanism to prove to a polynomially bounded verifier that two graphs are non-isomorphic. We will now describe an interactive proof system for GNI.
 
-The intuition is simple. Consider a verifier that randomly renames the vertices of one of the graphs and give it to the prover. Can the prover, given the relabeled graph, figure out which graph did the verifier start with?  If $G_0$ and $G_1$ were not isomorphic, then an unbounded-time prover can figure this out. However, in case $G_0$ and $G_1$ {are} isomorphic, then the distributions resulting from random relabelings of $G_0$ and $G_1$ are actually identical. Therefore, even an unbounded prover has no way of distinguishing which graph the verifier started with. So the prover has only a $\frac12$ probability of guessing which graph the verifier started with. Note that by repeating this process we can reduce the success probability of a cheating prover to negligible\footnote{This strategy is called soundness amplification by ``sequential'' repetition. Later, we might cover proof systems where we additionally consider ``parallel'' repetition to achieve different security properties.}. More formally, given a claim $(G_0,G_1)\in GNI$, we define the following interactive proof system:
+The intuition is simple. Consider a verifier that randomly renames the vertices of one of the graphs and give it to the prover. Can the prover, given the relabeled graph, figure out which graph did the verifier start with?  If $G_0$ and $G_1$ were not isomorphic, then an unbounded-time prover can figure this out. However, in case $G_0$ and $G_1$ {are} isomorphic, then the distributions resulting form random relabelings of $G_0$ and $G_1$ are actually identical. Therefore, even an unbounded prover has no way of distinguishing which graph the verifier started with. So the prover has only a $\frac12$ probability of guessing which graph the verifier started with. Note that by repeating this process we can reduce the success probability of a cheating prover to negligible\footnote{This strategy is called soundness amplification by ``sequential'' repetition. Later, we might cover proof systems where we additionally consider ``parallel'' repetition to achieve different security properties.}. More formally, given a claim $(G_0,G_1)\in GNI$, we define the following interactive proof system:
 
 %		If they consistently answer correctly, however, it would be hard to remain skeptical against $G_0 \ncong G_1$ as they beat the odds to almost impossible limits.  And so this interaction can ``prove" very strongly to the verifier that $(G_0,G_1)\in$ GNI.  Consider the protocol we can define from this:
 
@@ -113,7 +113,7 @@ To prove HVZK property of the GI proof system we described earlier, we now const
 	\item Set $H \gets \sigma(G_b)$.
 	\item Output $(H, b, \sigma)$.
 \end{enumerate}
-It is straightforward to see that this simulator produces the same distribution as the real interaction between the prover and the verifier. This is because $H = \sigma(G_b) = \sigma'(G_{1-b})$, i.e., $H$ is a random permutation of both $G_0$ and $G_1$. 
+It is straightforward to see that this simulator produces the same distribution as the real interaction between the prover and the verifier. This is because $H = \sigma(G_b) = \sigma'(G_{1-b})$, i.e., $H$ is a random permutation of both $G_0$ amd $G_1$. 
 	
 To recap: There is an interesting progression of the requirements of a proof system: Completeness, Soundness, and the Zero Knowledge property.  Completeness first cares that a prover-verifier pair exist and can capture all true things as a team that works together; they both honestly obey the protocol trying prove true statements.  Soundness, however, assumes that the prover is a liar and cares about having a strong enough verifier that can stand up to any type of prover and not be misled.  Finally, Zero Knowledge assumes that the verifier is hoping to glean information from the proof to learn the prover's secrets and this requirement makes sure the prover is clever enough that it gives no information away in its proof. Unlike the soundness' requirement for a verifier to combat \textit{all} malicious provers, HVZK is only concerned with the verifier in the original prover-verifier pair that follows the set protocol. Verifiers that stray from the protocol or cheat, however, are captured in the natural generalization to Zero Knowledge proofs.
 
@@ -376,7 +376,7 @@ There is an alternate definition of Statistical Correctness, where the probabili
 
 \medskip
 \noindent\textbf{Non-Adaptive Soundness.} $\forall x \not\in L$:
-    $$\Pr[\sigma \gets K(1^k): \exists~\pi, \text{ s.t. } V(\sigma, x, \pi)
+    $$\Pr[\sigma \gets K(1^k): \exists~\pi \st V(\sigma, x, \pi)
     = 1] = \mathsf{negl}(k).$$
 If the value of $\sigma$ that is picked is a ``bad" value, then there does not exist a proof $\pi$ for $x$ and $\sigma$. The above definition is ``non-adaptive", because it does not allow a cheating
 prover to decide which statement to prove after seeing the randomness $\sigma$.
@@ -385,7 +385,7 @@ prover is allowed to decide $x$ after seeing $\sigma$:
 
 \medskip
 \noindent\textbf{Adaptive Soundness.}
-    $$\Pr[\sigma \gets K(1^k): \exists~ (x, \pi), \text{ s.t. }x \not\in L, V(\sigma, x, \pi)
+    $$\Pr[\sigma \gets K(1^k): \exists~ (x, \pi) \st  x \not\in L, V(\sigma, x, \pi)
     = 1] = \mathsf{negl}(k).$$
     
 \medskip
@@ -964,6 +964,131 @@ a trapdoor permutation.
 \qed
 
 
+In this proof we assumed that the random string $r$ comes from a very specific distribution
+that corresponds to cycle matrices.
+Now we need to show that the general problem (where $r$ comes from a
+random uniform distribution of $\ell$ bits) can be reduced into this previous scenario.
+
+We proceed as follows.
+Let the length of the random string be
+$\ell=\left\lceil 3\cdot \log_2 n\right\rceil \cdot n^4$.
+We view the random string $r$ as $n^4$ blocks of $\left\lceil 3\cdot \log_2 n\right\rceil$
+bits and we generate a random string $r'$ of length $n^4$ such that each bit in $r'$
+is 1 if and only if all the bits in the corresponding block of $r$ are equal to 1.
+This way, the probability that the $i$-th bit of $r'$ equals 1 is $\Pr[r'_i=1]\approx\frac{1}{n^3}$ for every $i$.
+
+Then we create an $n^2\times n^2$ matrix $M$ whose entries are given by the bits of $r'$.
+Let $x$ be the number of one entries in the matrix $M$.
+The expected value for $x$ is $\frac{n^4}{n^3}=n$.
+And the probability that $x$ is exactly $n$ is noticeable. To prove that, we can use
+Chebyshev's inequality:
+$$\Pr[|x-n|\geq n]\leq\frac{\sigma^2}{n^2}=
+\frac{n^4\cdot \frac{1}{n^3}\cdot\left(1-\frac{1}{n^3}\right)}{n^2}<\frac{1}{n}.$$
+So we have $\Pr[1\leq x\leq 2n-1]>\frac{n-1}{n}$.
+And the probability $\Pr[x=k]$ is maximal for $k=n$, so we conclude that
+$\Pr[x=n]>\frac{n-1}{n(2n-1)}>\frac{1}{3n}$.
+
+Now suppose that this event ($x=n$) occurred and we have exactly $n$ entries equal to 1
+in matrix $M$. What is the probability that those $n$ entries are all in different rows
+and are all in different columns?
+
+We can think about the problem this way: after $k$ one entries have been added to the matrix,
+the probability that a new entry will be in a different row and different column is given by
+$\left(1-\frac{k}{n^2}\right)^2$. Multiplying all these values we get
+
+\begin{align*}
+\Pr[\text{no collision}] &\geq \left(1-\frac{1}{n^2}\right)^2 \cdot \left(1-\frac{2}{n^2}\right)^2
+\cdots \left(1-\frac{n-1}{n^2}\right)^2 \\
+& > 1 - 2\left(\frac{1}{n^2} + \frac{2}{n^2} +\cdots + \frac{n-1}{n^2}\right)
+= 1 - \frac{n-1}{n} = \frac{1}{n}.
+\end{align*}
+
+Now assume that this event happened: the matrix $M$ has exactly $n$ entries equal to 1
+and they are all in different rows and different columns.
+Then we can define a new $n\times n$ matrix $M_c$ by selecting only those $n$ rows
+and $n$ columns of $M$. By construction, $M_c$ is a permutation matrix.
+The probability that $M_c$ is a cycle matrix is $\frac{(n-1)!}{n!}=\frac{1}{n}$.
+An example is shown in Figures~\ref{fig:n2}~and~\ref{fig:n}.
+
+\begin{figure}[ht]
+	\centering
+		\includegraphics[height=8cm]{figures/n2.png}
+	\caption{Matrix $M$ which is $n^2\times n^2$ for $n=8$.}
+	\label{fig:n2}
+\end{figure}
+
+\begin{figure}[ht]
+	\centering
+		\includegraphics[height=4cm]{figures/n.png}
+	\caption{Matrix $M_c$ which is $n\times n$ for $n=8$. The construction worked,
+	         because $M_c$ is a cycle matrix.}
+	\label{fig:n}
+\end{figure}
+
+
+Now let's join all those probabilities. The probability that $M_c$ is a cycle matrix is at least
+$$\frac{1}{3n}\cdot \frac{1}{n}\cdot \frac{1}{n} > \frac{1}{3n^3}.$$
+
+If we repeat this process $n^4$ times, then the probability that $M_c$ is a cycle matrix in at least one iteration is at least
+$$1-\left(1-\frac{1}{3n^3}\right)^{n^4}\approx 1-e^{-\frac{n}{3}} = 1-\mathsf{negl}(n).$$
+
+
+\bigskip
+The proof system works as follows. Given a random string $r$, the prover $P$ tries
+to execute the construction above to obtain a cycle matrix.
+If the construction fails, the prover simply reveals all the bits in the string $r$
+to the verifier, who checks that the constructions indeed fails.
+If the construction succeeds, the prover reveals all the entries in the random string $r$
+that correspond to values in the matrix $M$ which are not used in matrix $M_c$.
+The verifier will check that all these values for matrix $M$ are indeed 0.
+
+Then the prover proceeds as in the previous scenario using matrix $M_c$: he
+reveals the transformation $\phi$ and opens all the non-edges.
+
+This process is repeated $n^4$ times. Or, equivalently, a big string of length
+$\left\lceil 3\cdot \log_2 n\right\rceil \cdot n^4\cdot n^4$ is used and they are all
+executed together. This produces a zero knowledge proof.
+
+\textit{Completeness:} if $P$ knows the Hamiltonian cycle of $G$,
+then he will be able to find a suitable transformation $\phi$ whenever a cycle graph is
+generated by the construction.
+
+\textit{Soundness:} if $P$ is lying and trying to prove a false statement, then he will
+get caught with very high probability. If any of the $n^4$ iterations produces a cycle
+graph, then $P$ will be caught. So the probability that he will be caught is
+$1-e^{-\frac{n}{3}} = 1-\mathsf{negl}(n)$.
+
+\textit{Zero Knowledge:} again $V$ cannot get any information if the construction succeeds.
+And if the construction doesn't succeed, all $V$ gets is the random string $r$, which also
+doesn't give any information.
+\qed
+
+
+\begin{theorem}
+For any language $L$ in $NP$, there is a non-interactive zero-knowledge (NIZK) proof
+in the hidden-bit model (HBM) for the language $L$.
+\end{theorem}
+\proof
+The language $L^*$ of Hamiltonian graphs is $NP$-complete. So any problem in $L$ can
+be reduced to a problem in $L^*$. More precisely, there is a polynomial-time function
+$f$ such that
+$$x\in L \Longleftrightarrow f(x)\in L^*.$$
+So given an input $x$, the prover can simply calculate $f(x)$ and
+produce a NIZK proof in the hidden-bit model for the fact that $f(x)\in L^*$.
+Then the verifier just needs to calculate $f(x)$ and check if the proof for the fact
+$f(x)\in L^*$ is correct.
+\qed
+
+\begin{theorem}\label{the:NIZK_NP}
+For any language $L$ in $NP$, there is a non-interactive zero-knowledge (NIZK) proof
+in the common reference string (CRS) model for the language $L$.
+\end{theorem}
+\proof
+In Theorem~\ref{thm:NIZK-amplify} it was shown that any NIZK proof in the hidden-bit model can
+be converted into a NIZK proof in the standard (common reference string) model by using
+a trapdoor permutation.
+\qed
+
 \section{zkSNARKs}
 \section*{Exercises}
 \begin{exercise}[Leaky ZK proof] Formally define:
@@ -1068,65 +1193,367 @@ Since $g$ is PRF, it can be shown that $\mathcal{H}_0 \cong \mathcal{H}_1$ using
 
 
 
-\subsection{Naor-Yung Construction}
+\subsection{Naor--Yung Construction}
 
-The Naor-Yung construction relies on a semantically-secure public-key encryption scheme $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ and an adaptively-secure NIZK proof system $(K, P, V)$ to construct a public-key encryption scheme $(\mathsf{Gen_{cca1}}, \mathsf{Enc_{cca1}}, \mathsf{Dec_{cca1}})$ that is CCA1 secure. The scheme is defined as follows:
+The Naor--Yung paradigm turns a CPA-secure public-key encryption scheme into a
+chosen-ciphertext secure scheme by encrypting the same message twice and proving,
+in zero knowledge, that the two ciphertexts are consistent. The core idea is that
+a valid ciphertext must contain two encryptions of the same plaintext, so the
+decryption oracle cannot be used to manufacture malformed ciphertexts that
+decrypt differently under the two keys.
+
+Let $(\mathsf{Gen},\mathsf{Enc},\mathsf{Dec})$ be an IND-CPA secure public-key
+encryption scheme. Let $(K,P,V)$ be an adaptively sound NIZK proof system for the
+NP relation
+\[
+R_{\mathsf{NY}}
+=
+\left\{
+\begin{array}{c}
+((pk_0,pk_1,c_0,c_1),(m,r_0,r_1))
+\end{array}
+\middle|
+\begin{array}{l}
+c_0=\mathsf{Enc}(pk_0,m;r_0) \\
+c_1=\mathsf{Enc}(pk_1,m;r_1)
+\end{array}
+\right\}.
+\]
+That is, the NIZK statement says that $c_0$ and $c_1$ encrypt the same message
+under the two public keys.
+
+\paragraph{CCA1-secure Naor--Yung encryption.}
+
+Define the encryption scheme
+$(\mathsf{Gen}_{\mathsf{cca1}},\mathsf{Enc}_{\mathsf{cca1}},\mathsf{Dec}_{\mathsf{cca1}})$
+as follows.
 
 \begin{itemize}
-    \item $\mathsf{Gen_{cca1}}(1^n): $
+    \item $\mathsf{Gen}_{\mathsf{cca1}}(1^n)$:
     \begin{enumerate}
-        \item $(pk_0, sk_0) \gets \mathsf{Gen}(1^n)$
-        \item $(pk_1, sk_1) \gets \mathsf{Gen}(1^n)$
-        \item $\sigma \gets K(1^n)$
-        \item Output $pk = (pk_0, pk_1, \sigma)$, $sk = sk_0$
+        \item $(pk_0,sk_0)\gets \mathsf{Gen}(1^n)$.
+        \item $(pk_1,sk_1)\gets \mathsf{Gen}(1^n)$.
+        \item $\sigma\gets K(1^n)$.
+        \item Output
+        \[
+        pk=(pk_0,pk_1,\sigma),
+        \qquad
+        sk=(sk_0,sk_1,\sigma).
+        \]
     \end{enumerate}
-    \item $\mathsf{Enc_{cca1}}(pk = (pk_0, pk_1, \sigma), m): $
+
+    \item $\mathsf{Enc}_{\mathsf{cca1}}(pk,m)$, where $pk=(pk_0,pk_1,\sigma)$:
     \begin{enumerate}
-        \item $\{c_b \gets \mathsf{Enc}(pk_b, m; r_b)\}_{b\in\bit}$
-        \item $\Pi \gets P(\sigma, (c_0, c_1), (m, r_0, r_1))$
-        \item Output $(c_0, c_1, \Pi)$
+        \item Sample $r_0,r_1$ uniformly.
+        \item Compute
+        \[
+        c_0\gets \mathsf{Enc}(pk_0,m;r_0),
+        \qquad
+        c_1\gets \mathsf{Enc}(pk_1,m;r_1).
+        \]
+        \item Compute a NIZK proof
+        \[
+        \Pi\gets P\bigl(\sigma,
+        (pk_0,pk_1,c_0,c_1),
+        (m,r_0,r_1)
+        \bigr).
+        \]
+        \item Output
+        \[
+        CT=(c_0,c_1,\Pi).
+        \]
     \end{enumerate}
-    \item  $\mathsf{Dec_{cca1}}(sk = sk_0, CT = (c_0, c_1, \Pi)): $
+
+    \item $\mathsf{Dec}_{\mathsf{cca1}}(sk,CT)$, where
+    $sk=(sk_0,sk_1,\sigma)$ and $CT=(c_0,c_1,\Pi)$:
     \begin{enumerate}
-        \item If $V(\sigma, (c_0, c_1), \Pi) = 1$: output $\mathsf{Dec}(sk_0, c_0)$
-        \item Else: output $\bot$
+        \item If
+        \[
+        V(\sigma,(pk_0,pk_1,c_0,c_1),\Pi)=0,
+        \]
+        output $\bot$.
+        \item Otherwise output
+        \[
+        \mathsf{Dec}(sk_0,c_0).
+        \]
     \end{enumerate}
 \end{itemize}
+
+The secret key contains both $sk_0$ and $sk_1$ even though decryption normally
+uses only $sk_0$. Keeping both keys is useful in the security proof, where we
+switch from answering decryption queries with $sk_0$ to answering them with
+$sk_1$.
 
 \begin{theorem}\label{thm:naor-yung-cca1}
-    Assuming $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ is a semantically-secure encryption scheme and $(K, P, V)$ is an adaptively-secure NIZK proof system, then $(\mathsf{Gen_{cca1}}, \mathsf{Enc_{cca1}}, \mathsf{Dec_{cca1}})$ is secure against non-adaptive chosen-ciphertext attacks. 
+Assume $(\mathsf{Gen},\mathsf{Enc},\mathsf{Dec})$ is IND-CPA secure and
+$(K,P,V)$ is an adaptively sound NIZK proof system for $R_{\mathsf{NY}}$.
+Then the Naor--Yung scheme above is IND-CCA1 secure.
 \end{theorem}
-\proof 
-Recall the definition of CCA1 security game:
 
-\begin{center}\begin{tabular}{ r c l }
-  \textbf{Challenger} & & \textbf{Adversary} \\
-  $(pk, sk) \gets \mathsf{Gen}(1^n)$ & $\xrightarrow{pk = (pk_0, pk_1, \sigma)}$ &  \\
-   & $\xleftarrow{CT_1}$ & \\
-  $m_1 \gets \mathsf{Dec}(sk, CT_1)$ & $\xrightarrow{m_1}$ & \\
-  $\vdots$ & $\vdots$ & $\vdots$ \\
-   & $\xleftarrow{CT_i}$ & \\
-  $m_i \gets \mathsf{Dec}(sk, CT_i)$ & $\xrightarrow{m_i}$ & \\
-   & $\xleftarrow{m_0, m_1}$ & \\
-  $b \overset{\$}{\gets} \{0, 1\}$, $c^* = \mathsf{Enc}(pk, m_b)$ & $\xrightarrow{c^* = (c_0^*, c_1^*, \Pi^*)}$ & \\
-  Output $1$ if $b' = b$, otherwise $0$ & $\xleftarrow{b'}$ & \\
-\end{tabular}
-\end{center}
+\begin{proof}
+We sketch the standard hybrid argument. In the CCA1 game, the adversary may ask
+decryption queries before seeing the challenge ciphertext, but not afterwards.
 
-Starting from this Game 0, we can derive Game 1 to 4, so that it is clear that at Game 4, the adversary does not receive any information about $b$ from $c^*$, and hence it is impossible to correctly guess $b$ with a non-negligible advantage. The intuition here is to replace $c_0^*, c_1^*, \Pi^*$ step by step. An important lemma that we make use of in the construction is:
-\begin{lemma} \label{lemma:naor-yung}
-For $\forall CT = (c_0, c_1, \Pi)$, we have that if $V(\sigma, (c_0, c_1), \Pi) = 1$, $\mathsf{Dec}(sk_0, c_0) = \mathsf{Dec}(sk_1, c_1).$
-\end{lemma}
+Let the challenge messages be $m_0,m_1$, and let $b\gets \{0,1\}$ be the
+challenge bit. The real challenge ciphertext is
+\[
+CT^*=(c_0^*,c_1^*,\Pi^*),
+\]
+where
+\[
+c_0^*=\mathsf{Enc}(pk_0,m_b;r_0^*),
+\qquad
+c_1^*=\mathsf{Enc}(pk_1,m_b;r_1^*),
+\]
+and $\Pi^*$ proves that $c_0^*$ and $c_1^*$ encrypt the same message.
 
-The lemma is a direct result of the soundness guarantee of the NIZK proof system. Now we are ready to construct the games:
+We use the following consequence of adaptive soundness. Except with negligible
+probability, every accepting proof $\Pi$ for a statement
+$(pk_0,pk_1,c_0,c_1)$ implies that there exists some $m$ and randomness
+$r_0,r_1$ such that
+\[
+c_0=\mathsf{Enc}(pk_0,m;r_0)
+\qquad\text{and}\qquad
+c_1=\mathsf{Enc}(pk_1,m;r_1).
+\]
+Therefore any valid ciphertext decrypts to the same message under $sk_0$ and
+$sk_1$, except with negligible probability.
+
+Now consider the following hybrids.
+
 \begin{itemize}
-    \item Game 1: instead of $(P, V)$, its simulator is used to provide the proof $\Pi^*$. Specifically, we  have $(\sigma, \tau) \gets S_1(1^n)$ and $\Pi^* \gets S_2(\tau, (c_0^*, c_1^*))$. Now $\Pi^*$ does not contain information about $b$.
-    \item Game 2: note that only $sk_0$ is used to answer all the decryption queries by the adversary, as a result, we can set $c_1^*\gets \mathsf{Enc}(pk_1, 0^{|m_1|})$. This works because of the indistinguishability of the public-key encryption scheme. Now $c_1^*$ does not contain information about $b$.
-    \item Game 3: using Lemma~\ref{lemma:naor-yung}, we can use $sk_1$ instead of $sk_0$ to answer all the decryption queries by the adversary.
-    \item Game 4: now, since only $sk_1$ is used to answer all the decryption queries by the adversary. we can set $c_0^*\gets \mathsf{Enc}(pk_0, 0^{|m_0|})$. This works because of the indistinguishability of the public-key encryption scheme. Now $c_0^*$ does not contain information about $b$ either.
+    \item \textbf{Hybrid 0.} This is the real IND-CCA1 experiment.
+
+    \item \textbf{Hybrid 1.} Replace the challenge proof $\Pi^*$ by a simulated
+    proof. That is, generate
+    \[
+    (\sigma,\tau)\gets S_1(1^n)
+    \]
+    and compute
+    \[
+    \Pi^*\gets S_2(\sigma,(pk_0,pk_1,c_0^*,c_1^*),\tau).
+    \]
+    By the zero-knowledge property of the NIZK, Hybrid 0 and Hybrid 1 are
+    computationally indistinguishable.
+
+    \item \textbf{Hybrid 2.} Replace
+    \[
+    c_1^*=\mathsf{Enc}(pk_1,m_b;r_1^*)
+    \]
+    with
+    \[
+    c_1^*=\mathsf{Enc}(pk_1,0^{|m_b|};r_1^*).
+    \]
+    The proof remains simulated, so it does not need a real witness. Since all
+    decryption queries happen before the challenge, the reduction to IND-CPA
+    security of the underlying encryption scheme can embed its challenge under
+    $pk_1$. Thus Hybrid 1 and Hybrid 2 are computationally indistinguishable.
+
+    \item \textbf{Hybrid 3.} Answer all pre-challenge decryption queries using
+    $sk_1$ instead of $sk_0$. By adaptive soundness of the NIZK, every accepting
+    ciphertext decrypts consistently under both keys except with negligible
+    probability. Therefore the adversary's view changes only negligibly.
+
+    \item \textbf{Hybrid 4.} Replace
+    \[
+    c_0^*=\mathsf{Enc}(pk_0,m_b;r_0^*)
+    \]
+    with
+    \[
+    c_0^*=\mathsf{Enc}(pk_0,0^{|m_b|};r_0^*).
+    \]
+    Now decryption queries are answered using $sk_1$, so the reduction to IND-CPA
+    security of the underlying encryption scheme can embed its challenge under
+    $pk_0$. Thus Hybrid 3 and Hybrid 4 are computationally indistinguishable.
 \end{itemize}
 
+In Hybrid 4, neither $c_0^*$ nor $c_1^*$ contains information about $b$, and the
+proof is simulated. Hence the adversary's advantage is negligible. By the hybrid
+argument, its advantage in the real CCA1 experiment is also negligible.
+\end{proof}
 
+
+\paragraph{CCA2-secure Naor--Yung encryption.}
+
+The CCA1 construction is not immediately CCA2 secure because, after seeing the
+challenge ciphertext, an adversary might try to submit related ciphertexts to the
+decryption oracle. The standard fix is to bind each ciphertext to a freshly
+generated one-time verification key and require a proof whose statement includes
+that key. The ciphertext is then signed using the matching one-time signing key.
+
+Let $(\mathsf{SigGen},\mathsf{Sign},\mathsf{Verify})$ be a strongly
+one-time unforgeable signature scheme. Let $(K,P,V)$ now be a
+\emph{simulation-sound} NIZK proof system for the relation
+\[
+R_{\mathsf{NY\text{-}CCA2}}
+=
+\left\{
+\begin{array}{c}
+((pk_0,pk_1,vk,c_0,c_1),(m,r_0,r_1))
+\end{array}
+\middle|
+\begin{array}{l}
+c_0=\mathsf{Enc}(pk_0,m;r_0) \\
+c_1=\mathsf{Enc}(pk_1,m;r_1)
+\end{array}
+\right\}.
+\]
+The only difference from $R_{\mathsf{NY}}$ is that the one-time verification key
+$vk$ is included in the statement. This binds the proof to the verification key
+used in the ciphertext.
+
+Define
+$(\mathsf{Gen}_{\mathsf{cca2}},\mathsf{Enc}_{\mathsf{cca2}},\mathsf{Dec}_{\mathsf{cca2}})$
+as follows.
+
+\begin{itemize}
+    \item $\mathsf{Gen}_{\mathsf{cca2}}(1^n)$:
+    \begin{enumerate}
+        \item $(pk_0,sk_0)\gets \mathsf{Gen}(1^n)$.
+        \item $(pk_1,sk_1)\gets \mathsf{Gen}(1^n)$.
+        \item $\sigma\gets K(1^n)$.
+        \item Output
+        \[
+        pk=(pk_0,pk_1,\sigma),
+        \qquad
+        sk=(sk_0,sk_1,\sigma).
+        \]
+    \end{enumerate}
+
+    \item $\mathsf{Enc}_{\mathsf{cca2}}(pk,m)$, where $pk=(pk_0,pk_1,\sigma)$:
+    \begin{enumerate}
+        \item Generate a fresh one-time signature key pair
+        \[
+        (vk,ssk)\gets \mathsf{SigGen}(1^n).
+        \]
+        \item Sample $r_0,r_1$ uniformly.
+        \item Compute
+        \[
+        c_0\gets \mathsf{Enc}(pk_0,m;r_0),
+        \qquad
+        c_1\gets \mathsf{Enc}(pk_1,m;r_1).
+        \]
+        \item Compute a NIZK proof
+        \[
+        \Pi\gets P\bigl(\sigma,
+        (pk_0,pk_1,vk,c_0,c_1),
+        (m,r_0,r_1)
+        \bigr).
+        \]
+        \item Sign the tuple $(c_0,c_1,\Pi)$:
+        \[
+        s\gets \mathsf{Sign}(ssk,(c_0,c_1,\Pi)).
+        \]
+        \item Output
+        \[
+        CT=(vk,c_0,c_1,\Pi,s).
+        \]
+    \end{enumerate}
+
+    \item $\mathsf{Dec}_{\mathsf{cca2}}(sk,CT)$, where
+    $sk=(sk_0,sk_1,\sigma)$ and $CT=(vk,c_0,c_1,\Pi,s)$:
+    \begin{enumerate}
+        \item If
+        \[
+        \mathsf{Verify}(vk,(c_0,c_1,\Pi),s)=0,
+        \]
+        output $\bot$.
+        \item If
+        \[
+        V(\sigma,(pk_0,pk_1,vk,c_0,c_1),\Pi)=0,
+        \]
+        output $\bot$.
+        \item Otherwise output
+        \[
+        \mathsf{Dec}(sk_0,c_0).
+        \]
+    \end{enumerate}
+\end{itemize}
+
+\begin{theorem}\label{thm:naor-yung-cca2}
+Assume $(\mathsf{Gen},\mathsf{Enc},\mathsf{Dec})$ is IND-CPA secure,
+$(\mathsf{SigGen},\mathsf{Sign},\mathsf{Verify})$ is strongly one-time
+unforgeable, and $(K,P,V)$ is a simulation-sound NIZK proof system for
+$R_{\mathsf{NY\text{-}CCA2}}$. Then the construction above is IND-CCA2 secure.
+\end{theorem}
+
+\begin{proof}
+We again give the standard hybrid proof sketch.
+
+The CCA2 adversary may ask decryption queries both before and after receiving the
+challenge ciphertext, except that it may not ask for the exact challenge
+ciphertext itself. Let the challenge ciphertext be
+\[
+CT^*=(vk^*,c_0^*,c_1^*,\Pi^*,s^*).
+\]
+
+First, replace the challenge proof $\Pi^*$ by a simulated proof. This is
+indistinguishable by the zero-knowledge property of the NIZK.
+
+Next, consider any post-challenge decryption query
+\[
+CT=(vk,c_0,c_1,\Pi,s).
+\]
+There are two cases.
+
+\begin{itemize}
+    \item If $vk=vk^*$, then any valid ciphertext different from $CT^*$ gives a
+    new valid signature under the one-time verification key $vk^*$. This violates
+    strong one-time unforgeability, except with negligible probability.
+
+    \item If $vk\neq vk^*$, then the NIZK statement is different from the
+    challenge statement because $vk$ is part of the statement. Simulation
+    soundness implies that, even after seeing the simulated proof $\Pi^*$, the
+    adversary cannot produce an accepting proof for a false statement. Therefore
+    any accepting ciphertext with $vk\neq vk^*$ must still contain two
+    encryptions of the same message, except with negligible probability.
+\end{itemize}
+
+Thus, except with negligible probability, every valid decryption query distinct
+from the challenge decrypts consistently under $sk_0$ and $sk_1$. Therefore we
+may switch the decryption oracle from using $sk_0$ to using $sk_1$ without
+noticeably changing the adversary's view.
+
+Once the oracle is answered using $sk_1$, we replace
+\[
+c_0^*=\mathsf{Enc}(pk_0,m_b;r_0^*)
+\]
+with
+\[
+c_0^*=\mathsf{Enc}(pk_0,0^{|m_b|};r_0^*)
+\]
+by IND-CPA security of the underlying encryption scheme. Because the proof is
+simulated, no witness is needed for this modified challenge ciphertext.
+
+Then we switch the decryption oracle back from $sk_1$ to $sk_0$, again using
+simulation soundness and one-time unforgeability to argue that all valid
+ciphertexts decrypt consistently.
+
+Finally, replace
+\[
+c_1^*=\mathsf{Enc}(pk_1,m_b;r_1^*)
+\]
+with
+\[
+c_1^*=\mathsf{Enc}(pk_1,0^{|m_b|};r_1^*)
+\]
+by IND-CPA security under $pk_1$. At this point, both components of the challenge
+ciphertext are encryptions of zero, and the proof is simulated, so the challenge
+ciphertext contains no information about $b$.
+
+Therefore the adversary has only negligible advantage in the final hybrid, and
+hence only negligible advantage in the real IND-CCA2 experiment.
+\end{proof}
+
+\paragraph{Why CCA2 needs the extra signature.}
+
+The CCA1 proof only has to handle decryption queries made before the challenge.
+For CCA2, the adversary sees the challenge and can then try to submit modified
+ciphertexts. The one-time signature prevents modifications that keep the same
+verification key $vk^*$, while simulation soundness prevents the adversary from
+using the simulated challenge proof to create a new valid proof for an invalid
+ciphertext under a different verification key. This is exactly the gap between
+ordinary NIZK soundness and the stronger simulation-sound NIZK needed for CCA2.
 
 \section{zkSNARKs}
 
@@ -1175,8 +1602,7 @@ Consider the boolean circuit in Figure \ref{fig:ssp}. We will transform this cir
 \begin{figure}[h]
   \centering
   \includegraphics[width=0.4\textwidth]{figures/ssp.pdf}
-  \caption{Boolean circuit example for SSP transformation}
-  \label{fig:ssp}
+  \caption{Boolean circuit example for SSP transformation \label{fig:ssp}} 
 \end{figure}
 
 First, we express each gate type as a linear constraint. For a XOR gate, the output $a_4$ of inputs $a_1, a_2$ must satisfy $a_1 + a_2 + a_4 \in \{0, 2\}$. For an OR gate, the output $a_5$ of inputs $a_2, a_3$ must satisfy $(1-a_2) + (1-a_3) - 2(1-a_5) \in \{0, 1\}$. For a NAND gate, the output $a_6$ of inputs $a_4, a_5$ must satisfy $a_4 + a_5 - 2(1-a_6) \in \{0, 1\}$.
